@@ -125,7 +125,7 @@ The application generates (with proper XML escaping):
 
 ## Appicon
 
-Appicon based on an icon of [Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
+Appicon based on an image of [Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
 
 ## License
 
