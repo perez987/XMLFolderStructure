@@ -9,6 +9,10 @@
 
 This macOS SwiftUI application retrieves the structure of a directory, including files and subfolders recursively, outputting the result in XML format.
 
+## Main window image
+
+[Main-window.md](Main-window.md)
+
 ## Features
 
 - **Directory Selection**: Browse and select any folder on your Mac
