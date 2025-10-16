@@ -1,9 +1,13 @@
-# XML with folder structure in SwiftUI
-XML text with the structure of a directory and its files in SwiftUI
+# Structure of a directory as XML in SwiftUI
+
+<p align="center">
+<img width="128" src="Images/Appicon-128.png">
+</p>
+
 
 ## Description
 
-This macOS SwiftUI application recursively retrieves the structure of a directory and its files, outputting the result in XML format.
+This macOS SwiftUI application retrieves the structure of a directory, including files and subfolders recursively, outputting the result in XML format.
 
 ## Features
 
