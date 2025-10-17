@@ -129,7 +129,7 @@ The application generates (with proper XML escaping):
 
 ## Appicon
 
-Appicon based on a work by _riajulislam_ from [Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
+Appicon based on a work by *Shuvo.Das* from [Flaticon](https://www.flaticon.com/free-icons/files-and-folders)
 
 ## License
 
