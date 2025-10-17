@@ -19,6 +19,8 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 - **XML Generation**: Creates a structured XML representation of the selected directory
 - **Recursive Traversal**: Includes all subdirectories and their files
 - **Proper Indentation**: XML output is properly indented for easy reading
+- **Export to File**: Save the generated XML to a file with a user-chosen name and location
+- **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
 - **Error Handling**: Displays user-friendly error messages for any issues
 
 ## XML Output Format
@@ -125,7 +127,8 @@ The application generates (with proper XML escaping):
 2. The selected directory path will appear in the text field
 3. Click the **Generate XML** button to create the XML output
 4. The XML structure will appear in the text area below
-5. You can copy the XML text from the output area
+5. Use the **Export to File** button to save the XML to a file (choose location and filename)
+6. Use the **Copy to Clipboard** button to copy the XML text to your clipboard
 
 ## Appicon
 

@@ -3,3 +3,5 @@
 "Browse:" = "Explorar";
 "Generate XML:" = "Generar XML";
 "XML Output:" = "Texto XML";
+"Export to File:" = "Exportar a un archivo";
+"Copy to Clipboard:" = "Copiar al portapapeles";

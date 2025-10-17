@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @State private var selectedDirectory: URL?
@@ -46,6 +47,23 @@ struct ContentView: View {
 //						.background(Color.Navy)
 //						.foregroundStyle(.white)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                // Export and clipboard buttons
+                HStack(spacing: 10) {
+                    Spacer()
+                    Button(NSLocalizedString("Export to File:", comment: "")) {
+                        exportToFile()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(xmlOutput.isEmpty)
+                    Spacer()
+                    Button(NSLocalizedString("Copy to Clipboard:", comment: "")) {
+                        copyToClipboard()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(xmlOutput.isEmpty)
+                    Spacer()
+                }
             }
             .padding(26)
 //            .padding(.horizontal)
@@ -176,6 +194,31 @@ struct ContentView: View {
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
+    }
+    
+    // MARK: - Export and Clipboard
+    
+    private func exportToFile() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.xml]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "folder_structure.xml"
+        
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                do {
+                    try xmlOutput.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    showErrorMessage("Failed to save file: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func copyToClipboard() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(xmlOutput, forType: .string)
     }
 }
 
