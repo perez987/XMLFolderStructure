@@ -1,7 +1,7 @@
 # Structure of a directory as XML in SwiftUI
 
 <p align="center">
-<img width="128" src="Images/Appicon-128.png">
+<img width="128" src="Images/Appicon-2x128.png">
 </p>
 
 
