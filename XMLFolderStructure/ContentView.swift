@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var xmlOutput: String = ""
     @State private var errorMessage: String = ""
     @State private var showError: Bool = false
+    @State private var highlightedXML: NSAttributedString = NSAttributedString()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -41,11 +42,7 @@ struct ContentView: View {
                 Text(NSLocalizedString("XML Output:", comment: ""))
                     .font(.headline)
 
-                    TextEditor(text: $xmlOutput)
-                        .font(.system(.body, design: .default))
-//						.scrollContentBackground(.hidden)
-//						.background(Color.Navy)
-//						.foregroundStyle(.white)
+                    SyntaxHighlightedTextView(attributedString: $highlightedXML)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Export and clipboard buttons
@@ -107,6 +104,7 @@ struct ContentView: View {
         
         do {
             xmlOutput = try buildXML(for: directory)
+            highlightedXML = XMLSyntaxHighlighter.highlight(xmlOutput)
         } catch {
             showErrorMessage("Error generating XML: \(error.localizedDescription)")
         }
@@ -120,6 +118,18 @@ struct ContentView: View {
         escaped = escaped.replacingOccurrences(of: "\"", with: "&quot;")
         escaped = escaped.replacingOccurrences(of: "'", with: "&apos;")
         return escaped
+    }
+    
+    private func formatFileSize(_ size: Int) -> String {
+        let locale: Locale = Locale(identifier: "en")
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .decimal
+        formatter.groupingSeparator = "."
+        formatter.groupingSize = 3
+        formatter.usesGroupingSeparator = true
+        formatter.hasThousandSeparators = true
+        return formatter.string(from: NSNumber(value: size)) ?? "\(size)"
     }
     
     private func buildXML(for url: URL) throws -> String {
@@ -146,7 +156,7 @@ struct ContentView: View {
         do {
             let contents = try fileManager.contentsOfDirectory(
                 at: url,
-                includingPropertiesForKeys: [.isDirectoryKey],
+                includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey],
                 options: [.skipsHiddenFiles]
             )
             
@@ -162,7 +172,7 @@ struct ContentView: View {
             }
             
             for item in sortedContents {
-                let resourceValues = try item.resourceValues(forKeys: [.isDirectoryKey])
+                let resourceValues = try item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
                 let isDirectory = resourceValues.isDirectory ?? false
                 let name = xmlEscape(item.lastPathComponent)
                 
@@ -176,8 +186,17 @@ struct ContentView: View {
                     // Close folder tag
                     xml += "\(indent)</folder>\n"
                 } else {
-                    // File tag
-                    xml += "\(indent)<file name=\"\(name)\" />\n"
+                    // File tag with size and date attributes
+                    let fileSize = (resourceValues.fileSize) ?? 0
+                    let formattedSize = formatFileSize(fileSize)
+                    
+                    let modificationDate = resourceValues.contentModificationDate ?? Date()
+                    let dateFormatter = DateFormatter()
+//                    dateFormatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+                    dateFormatter.dateFormat = "d/M/yyyy"
+                    let formattedDate = dateFormatter.string(from: modificationDate)
+                    
+                    xml += "\(indent)<file name=\"\(name)\" size=\"\(formattedSize)\" modified=\"\(formattedDate)\" />\n"
                 }
             }
         } catch {
@@ -219,6 +238,33 @@ struct ContentView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(xmlOutput, forType: .string)
+    }
+}
+
+// MARK: - Custom Syntax Highlighted Text View
+
+struct SyntaxHighlightedTextView: NSViewRepresentable {
+    @Binding var attributedString: NSAttributedString
+    
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSTextView.scrollableTextView()
+        let textView = scrollView.documentView as! NSTextView
+        
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.backgroundColor = NSColor.textBackgroundColor
+        textView.drawsBackground = true
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticLinkDetectionEnabled = false
+        textView.isAutomaticDataDetectionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        
+        return scrollView
+    }
+    
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        textView.textStorage?.setAttributedString(attributedString)
     }
 }
 

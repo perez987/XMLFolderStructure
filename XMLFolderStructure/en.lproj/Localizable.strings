@@ -5,3 +5,4 @@
 "XML Output:" = "XML Output";
 "Export to File:" = "Export to File";
 "Copy to Clipboard:" = "Copy to Clipboard";
+"Failed to read directory at @: @" = "Failed to read directory at @: @";
