@@ -5,4 +5,5 @@
 "XML Output:" = "Texto XML";
 "Export to File:" = "Exportar a un archivo";
 "Copy to Clipboard:" = "Copiar al portapapeles";
-"Failed to read directory at @: @" = "Error al ller el directorio @: @";
+"Processing:" = "Procesando:";
+"items" = "elementos";

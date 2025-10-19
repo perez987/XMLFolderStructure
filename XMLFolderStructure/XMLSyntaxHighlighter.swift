@@ -13,7 +13,8 @@ class XMLSyntaxHighlighter {
         let fullRange = NSRange(location: 0, length: xml.utf16.count)
         
         // Base font and color
-        let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+//        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        let font = NSFont.systemFont(ofSize: 12)
         attributedString.addAttribute(.font, value: font, range: fullRange)
         attributedString.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
         
