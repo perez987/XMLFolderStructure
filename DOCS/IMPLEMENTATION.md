@@ -1,9 +1,10 @@
-# Implementation Summary: File Metadata and Syntax Highlighting
+# Implementation Summary: File Metadata, Syntax Highlighting, and Progress Indicator
 
 ## Overview
-This document summarizes the implementation of two new features for the XMLFolderStructure macOS application:
+This document summarizes the implementation of three features for the XMLFolderStructure macOS application:
 1. File size and modification date metadata in XML attributes
 2. Syntax highlighting for XML output display
+3. Progress indicator for large directories
 
 ## Changes Made
 
@@ -153,13 +154,132 @@ private func generateXML() {
 - Export and clipboard functions use the original `xmlOutput` string
 - Syntax highlighting is only for visual display within the app
 
+## 3. Progress Indicator Feature
+
+### What Was Changed
+
+Added a real-time progress indicator that displays during XML generation for large directories, showing both a progress bar and item count.
+
+### Implementation Details
+
+- **File**: `XMLFolderStructure/ContentView.swift`
+- **New Functions**: `countItems(at:)`, `buildXMLAsync(for:)`, `processDirectoryAsync(at:indentLevel:)`
+- **Functions Modified**: `generateXML()`
+- **Lines Added**: ~150 lines
+- **Localization**: Added "Processing:" and "items" strings to English and Spanish
+
+#### Components Added
+
+**1. State Variables for Progress Tracking**
+
+```swift
+@State private var isGenerating: Bool = false
+@State private var progressValue: Double = 0.0
+@State private var totalItems: Int = 0
+@State private var processedItems: Int = 0
+```
+
+**2. Progress UI Component**
+
+```swift
+if isGenerating {
+    VStack(spacing: 5) {
+        ProgressView(value: progressValue, total: 1.0)
+            .progressViewStyle(.linear)
+            .frame(maxWidth: 400)
+        Text("Processing: \(processedItems) / \(totalItems) items")
+            .font(.caption)
+            .foregroundColor(.secondary)
+    }
+}
+```
+
+**3. Item Counting Function**
+
+```swift
+private func countItems(at url: URL) -> Int {
+    // Uses FileManager.enumerator for efficient counting
+    // Skips hidden files
+    // Returns total count for progress calculation
+}
+```
+
+**4. Asynchronous Generation with Progress**
+
+```swift
+private func generateXML() {
+    // Reset progress state
+    isGenerating = true
+    progressValue = 0.0
+    processedItems = 0
+    
+    // Run asynchronously in Task
+    Task {
+        // Count total items first
+        totalItems = countItems(at: directory)
+        
+        // Generate XML with progress updates
+        let xml = try await buildXMLAsync(for: directory)
+        
+        // Update UI on main thread
+        await MainActor.run {
+            xmlOutput = xml
+            highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+            isGenerating = false
+        }
+    }
+}
+```
+
+**5. Async Processing Functions**
+
+- `buildXMLAsync(for:)`: Async version of buildXML
+- `processDirectoryAsync(at:indentLevel:)`: Async version with progress updates
+
+```swift
+// Update progress after each item
+await MainActor.run {
+    processedItems += 1
+    progressValue = Double(processedItems) / Double(totalItems)
+}
+```
+
+#### Key Design Decisions
+
+##### Asynchronous Processing
+
+- Uses Swift's async/await for non-blocking execution
+- Wraps in Task for proper async context
+- Updates UI on MainActor to ensure thread safety
+
+##### Progress Calculation
+
+- Pre-counts all items before processing for accurate progress
+- Updates after each file/folder processed
+- Calculates percentage: `processedItems / totalItems`
+
+##### UI Updates
+
+- Progress bar uses linear style for simplicity
+- Shows both visual (progress bar) and numeric (X / Y items) feedback
+- Disables Generate button during processing
+- Hides progress UI when not generating
+
+##### Performance
+
+- Counting pass is fast (no XML generation)
+- Progress updates happen on main thread but are minimal
+- Original synchronous functions kept for compatibility
+
 ## Conclusion
 
-Both features have been successfully implemented with minimal changes to the existing codebase:
+All three features have been successfully implemented with minimal changes to the existing codebase:
 
 - ✅ File metadata adds valuable information to XML output
 - ✅ Syntax highlighting improves readability and user experience
+- ✅ Progress indicator provides feedback for large directory processing
 - ✅ Changes are focused and surgical
 - ✅ No existing functionality was broken
 - ✅ Documentation comprehensively updated
 - ✅ Code follows Swift and SwiftUI best practices
+- ✅ Proper use of async/await and MainActor for thread safety

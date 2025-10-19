@@ -8,6 +8,12 @@ struct ContentView: View {
     @State private var errorMessage: String = ""
     @State private var showError: Bool = false
     @State private var highlightedXML: NSAttributedString = NSAttributedString()
+    @State private var isGenerating: Bool = false
+    @State private var progressValue: Double = 0.0
+    @State private var totalItems: Int = 0
+    @State private var processedItems: Int = 0
+    
+    private let xmlGenerator = XMLGenerator()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -31,7 +37,20 @@ struct ContentView: View {
                     generateXML()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(selectedDirectory == nil)
+                .disabled(selectedDirectory == nil || isGenerating)
+                
+                // Progress indicator
+                if isGenerating {
+                    VStack(spacing: 5) {
+                        ProgressView(value: progressValue, total: 1.0)
+                            .progressViewStyle(.linear)
+                            .frame(maxWidth: 400)
+                        Text("\(NSLocalizedString("Processing:", comment: "")) \(processedItems) / \(totalItems) \(NSLocalizedString("items", comment: ""))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+                }
             }
             .padding(.top)
             
@@ -102,112 +121,45 @@ struct ContentView: View {
             return
         }
         
-        do {
-            xmlOutput = try buildXML(for: directory)
-            highlightedXML = XMLSyntaxHighlighter.highlight(xmlOutput)
-        } catch {
-            showErrorMessage("Error generating XML: \(error.localizedDescription)")
-        }
-    }
-    
-    private func xmlEscape(_ string: String) -> String {
-        var escaped = string
-        escaped = escaped.replacingOccurrences(of: "&", with: "&amp;")
-        escaped = escaped.replacingOccurrences(of: "<", with: "&lt;")
-        escaped = escaped.replacingOccurrences(of: ">", with: "&gt;")
-        escaped = escaped.replacingOccurrences(of: "\"", with: "&quot;")
-        escaped = escaped.replacingOccurrences(of: "'", with: "&apos;")
-        return escaped
-    }
-    
-    private func formatFileSize(_ size: Int) -> String {
-        let locale: Locale = Locale(identifier: "en")
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = "."
-        formatter.groupingSize = 3
-        formatter.usesGroupingSeparator = true
-        formatter.hasThousandSeparators = true
-        return formatter.string(from: NSNumber(value: size)) ?? "\(size)"
-    }
-    
-    private func buildXML(for url: URL) throws -> String {
-        var xml = ""
-        let directoryName = xmlEscape(url.lastPathComponent)
+        // Reset progress state
+        isGenerating = true
+        progressValue = 0.0
+        processedItems = 0
+        xmlOutput = ""
+        highlightedXML = NSAttributedString()
         
-        // Root directory opening tag
-        xml += "<root name=\"\(directoryName)\" text=\"Root directory\">\n"
+        // Set up progress callback	
+		xmlGenerator.onProgressUpdate = { processed, progress in
+		    Task { @MainActor in
+		        self.processedItems = processed
+		        self.progressValue = progress
+		    }
+		}
         
-        // Process directory contents recursively
-        xml += try processDirectory(at: url, indentLevel: 1)
-        
-        // Closing tag
-        xml += "</root>\n"
-        
-        return xml
-    }
-    
-    private func processDirectory(at url: URL, indentLevel: Int) throws -> String {
-        var xml = ""
-        let fileManager = FileManager.default
-        let indent = String(repeating: "  ", count: indentLevel)
-        
-        do {
-            let contents = try fileManager.contentsOfDirectory(
-                at: url,
-                includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey],
-                options: [.skipsHiddenFiles]
-            )
-            
-            // Sort contents: directories first, then files, both alphabetically
-            let sortedContents = contents.sorted { url1, url2 in
-                let isDir1 = (try? url1.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
-                let isDir2 = (try? url2.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
-                
-                if isDir1 != isDir2 {
-                    return isDir1
+        // Run XML generation asynchronously
+        Task {
+            do {
+                // Count total items first
+                await MainActor.run {
+                    totalItems = xmlGenerator.countItems(at: directory)
                 }
-                return url1.lastPathComponent.localizedStandardCompare(url2.lastPathComponent) == .orderedAscending
-            }
-            
-            for item in sortedContents {
-                let resourceValues = try item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
-                let isDirectory = resourceValues.isDirectory ?? false
-                let name = xmlEscape(item.lastPathComponent)
                 
-                if isDirectory {
-                    // Folder tag
-                    xml += "\(indent)<folder name=\"\(name)\">\n"
-                    
-                    // Recursively process subdirectory
-                    xml += try processDirectory(at: item, indentLevel: indentLevel + 1)
-                    
-                    // Close folder tag
-                    xml += "\(indent)</folder>\n"
-                } else {
-                    // File tag with size and date attributes
-                    let fileSize = (resourceValues.fileSize) ?? 0
-                    let formattedSize = formatFileSize(fileSize)
-                    
-                    let modificationDate = resourceValues.contentModificationDate ?? Date()
-                    let dateFormatter = DateFormatter()
-//                    dateFormatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
-                    dateFormatter.dateFormat = "d/M/yyyy"
-                    let formattedDate = dateFormatter.string(from: modificationDate)
-                    
-                    xml += "\(indent)<file name=\"\(name)\" size=\"\(formattedSize)\" modified=\"\(formattedDate)\" />\n"
+                // Generate XML with progress tracking
+                let xml = try await xmlGenerator.buildXMLAsync(for: directory)
+                
+                // Update UI on main thread
+                await MainActor.run {
+                    xmlOutput = xml
+                    highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+                    isGenerating = false
+                }
+            } catch {
+                await MainActor.run {
+                    showErrorMessage("Error generating XML: \(error.localizedDescription)")
+                    isGenerating = false
                 }
             }
-        } catch {
-            throw NSError(
-                domain: "XMLFolderStructure",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to read directory at \(url.path): \(error.localizedDescription)"]
-            )
         }
-        
-        return xml
     }
     
     private func showErrorMessage(_ message: String) {

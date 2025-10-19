@@ -17,6 +17,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 
 - **Directory Selection**: Browse and select any folder on your Mac
 - **XML Generation**: Creates a structured XML representation of the selected directory
+- **Progress Indicator**: Shows real-time progress when processing large directories with a progress bar and item counter
 - **Recursive Traversal**: Includes all subdirectories and their files
 - **File Metadata**: Includes file size (in bytes, formatted with dot separators) and modification date for each file
 - **Syntax Highlighting**: XML output is displayed with color-coded syntax highlighting for better readability
@@ -24,8 +25,6 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 - **Export to File**: Save the generated XML to a file with a user-chosen name and location
 - **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
 - **Error Handling**: Displays user-friendly error messages for any issues
-
-**Note**: Export to file functionality requires user-selected file read/write entitlement in Xcode.
 
 ## XML Output Format
 
