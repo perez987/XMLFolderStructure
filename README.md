@@ -25,6 +25,8 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 - **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
 - **Error Handling**: Displays user-friendly error messages for any issues
 
+**Note**: Export to file functionality requires user-selected file read/write entitlement in Xcode.
+
 ## XML Output Format
 
 ```xml
