@@ -25,7 +25,9 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 
 ## XML Output Format
 
-```xml
+There is no syntax highlighting because it is a very CPU-intensive task in large directories with tens of thousands of items.
+
+```
 <root name="directory_name" text="Root directory">
   <folder name="subfolder1">
     <file name="file1.txt" size="1.024" modified="18-14-2024" />
