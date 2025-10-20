@@ -1,26 +1,23 @@
 # Structure of a directory as XML in SwiftUI
 
-<p align="center">
-<img width="128" src="Images/Appiconx128.png">
-</p>
-
-
 ## Description
 
 This macOS SwiftUI application retrieves the structure of a directory, including files and subfolders recursively, outputting the result in XML format.
 
 ## Main window image
 
-[Main-window.md](Main-window.md)
+<p align="center">
+<img width="680" src="Images/Main-window.png">
+</p>
+<!-- [Main-window.md](Main-window.md) -->
 
 ## Features
 
 - **Directory Selection**: Browse and select any folder on your Mac
 - **XML Generation**: Creates a structured XML representation of the selected directory
-- **Progress Indicator**: Shows real-time progress when processing large directories with a progress bar and item counter
-- **Recursive Traversal**: Includes all subdirectories and their files
+- **Progress Indicator**: Shows progress with a progress bar and item counter
+- **Recursive Scanning**: Includes all subdirectories and their files
 - **File Metadata**: Includes file size (in bytes, formatted with dot separators) and modification date for each file
-- **Syntax Highlighting**: XML output is displayed with color-coded syntax highlighting for better readability
 - **Proper Indentation**: XML output is properly indented for easy reading
 - **Export to File**: Save the generated XML to a file with a user-chosen name and location
 - **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
@@ -69,11 +66,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 1. Click the **Browse** button to select a folder
 2. The selected directory path will appear in the text field
 3. Click the **Generate XML** button to create the XML output
-4. The XML structure will appear in the text area below with color-coded syntax highlighting:
-   - **Green**: XML tag names (root, folder, file)
-   - **Purple**: Attribute names (name, size, modified, text)
-   - **Blue**: Attribute values (in quotes)
-   - **Gray**: XML brackets and slashes
+4. The XML structure will appear in the text area below
 5. Use the **Export to File** button to save the XML to a file (choose location and filename)
 6. Use the **Copy to Clipboard** button to copy the XML text to your clipboard
 

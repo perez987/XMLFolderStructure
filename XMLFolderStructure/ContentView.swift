@@ -7,7 +7,6 @@ struct ContentView: View {
     @State private var xmlOutput: String = ""
     @State private var errorMessage: String = ""
     @State private var showError: Bool = false
-    @State private var highlightedXML: NSAttributedString = NSAttributedString()
     @State private var isGenerating: Bool = false
     @State private var progressValue: Double = 0.0
     @State private var totalItems: Int = 0
@@ -29,14 +28,14 @@ struct ContentView: View {
                     Button(NSLocalizedString("Browse:", comment: "")) {
                         selectDirectory()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                 }
                 .padding(.horizontal)
                 
                 Button(NSLocalizedString("Generate XML:", comment: "")) {
                     generateXML()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .disabled(selectedDirectory == nil || isGenerating)
                 
                 // Progress indicator
@@ -45,7 +44,10 @@ struct ContentView: View {
                         ProgressView(value: progressValue, total: 1.0)
                             .progressViewStyle(.linear)
                             .frame(maxWidth: 400)
+                            // Text: Processing processed_items / total_number items
                         Text("\(NSLocalizedString("Processing:", comment: "")) \(processedItems) / \(totalItems) \(NSLocalizedString("items", comment: ""))")
+                            // Text: Directory contains total_number items
+//                        Text("\(NSLocalizedString("Directory contains:", comment: "")) \(totalItems) \(NSLocalizedString("items", comment: ""))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -61,8 +63,10 @@ struct ContentView: View {
                 Text(NSLocalizedString("XML Output:", comment: ""))
                     .font(.headline)
 
-                    SyntaxHighlightedTextView(attributedString: $highlightedXML)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                TextEditor(text: $xmlOutput)
+//                    .font(.system(.body, design: .monospaced))
+                    .font(.system(.callout))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Export and clipboard buttons
                 HStack(spacing: 10) {
@@ -70,13 +74,13 @@ struct ContentView: View {
                     Button(NSLocalizedString("Export to File:", comment: "")) {
                         exportToFile()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                     .disabled(xmlOutput.isEmpty)
                     Spacer()
                     Button(NSLocalizedString("Copy to Clipboard:", comment: "")) {
                         copyToClipboard()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                     .disabled(xmlOutput.isEmpty)
                     Spacer()
                 }
@@ -126,7 +130,6 @@ struct ContentView: View {
         progressValue = 0.0
         processedItems = 0
         xmlOutput = ""
-        highlightedXML = NSAttributedString()
         
         // Set up progress callback	
 		xmlGenerator.onProgressUpdate = { processed, progress in
@@ -149,8 +152,9 @@ struct ContentView: View {
                 
                 // Update UI on main thread
                 await MainActor.run {
+                    processedItems = totalItems
+                    progressValue = 1.0
                     xmlOutput = xml
-                    highlightedXML = XMLSyntaxHighlighter.highlight(xml)
                     isGenerating = false
                 }
             } catch {
@@ -193,32 +197,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Custom Syntax Highlighted Text View
 
-struct SyntaxHighlightedTextView: NSViewRepresentable {
-    @Binding var attributedString: NSAttributedString
-    
-    func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSTextView.scrollableTextView()
-        let textView = scrollView.documentView as! NSTextView
-        
-        textView.isEditable = false
-        textView.isSelectable = true
-        textView.backgroundColor = NSColor.textBackgroundColor
-        textView.drawsBackground = true
-        textView.isAutomaticQuoteSubstitutionEnabled = false
-        textView.isAutomaticLinkDetectionEnabled = false
-        textView.isAutomaticDataDetectionEnabled = false
-        textView.isAutomaticTextReplacementEnabled = false
-        
-        return scrollView
-    }
-    
-    func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? NSTextView else { return }
-        textView.textStorage?.setAttributedString(attributedString)
-    }
-}
 
 #Preview {
     ContentView()

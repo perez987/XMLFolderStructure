@@ -1,10 +1,11 @@
-# Implementation Summary: File Metadata, Syntax Highlighting, and Progress Indicator
+# Implementation Summary: File Metadata and Progress Indicator
 
 ## Overview
-This document summarizes the implementation of three features for the XMLFolderStructure macOS application:
+
+This document summarizes the implementation of features for the XMLFolderStructure macOS application:
 1. File size and modification date metadata in XML attributes
-2. Syntax highlighting for XML output display
-3. Progress indicator for large directories
+2. Progress indicator for large directories
+3. Optimized XML display for fast rendering of large files
 
 ## Changes Made
 
@@ -55,117 +56,20 @@ xml += "\(indent)<file name=\"\(name)\" size=\"\(fileSize)\" modified=\"\(format
 XML output now includes:
 
 ```xml
-<file name="README.md" size="1024" modified="18-10-2024" />
+<file name="README.md" size="1.024" modified="18-10-2024" />
 ```
 
-### 2. Syntax Highlighting Feature
-
-#### What Was Changed
-
-Replaced the plain TextEditor with a custom syntax-highlighted view that displays XML with color-coded elements.
-
-#### Implementation Details
-
-- **File**: `XMLFolderStructure/ContentView.swift`
-- **New Functions**: `highlightXMLSyntax(_:)`, `SyntaxHighlightedTextView` struct
-- **Lines Added**: ~85 lines
-
-#### Components Added
-
-**1. State Variable for Highlighted XML**
-
-```swift
-@State private var highlightedXML: NSAttributedString = NSAttributedString()
-```
-
-**2. XML Syntax Highlighter Function**
-
-```swift
-private func highlightXMLSyntax(_ xml: String) -> NSAttributedString {
-    // Creates NSAttributedString with color-coded elements
-    // Uses NSRegularExpression to identify:
-    // - Tag names: <root, <folder, <file (green)
-    // - Attribute names: name, size, modified (purple)
-    // - Attribute values: "..." (blue)
-    // - XML syntax: <, >, /, = (gray)
-}
-```
-
-**3. Custom SwiftUI View Wrapper**
-
-```swift
-struct SyntaxHighlightedTextView: NSViewRepresentable {
-    // Wraps NSTextView for displaying attributed text in SwiftUI
-    // Configures text view as non-editable but selectable
-    // Updates display when attributedString binding changes
-}
-```
-
-**4. UI Update**
-
-```swift
-// Before:
-TextEditor(text: $xmlOutput)
-    .font(.system(.body, design: .default))
-
-// After:
-SyntaxHighlightedTextView(attributedString: $highlightedXML)
-```
-
-**5. Generation Update**
-
-```swift
-private func generateXML() {
-    // ...
-    xmlOutput = try buildXML(for: directory)
-    highlightedXML = highlightXMLSyntax(xmlOutput)  // Added this line
-    // ...
-}
-```
-
-#### Color Scheme
-
-| Element | Color | Example |
-|---------|-------|---------|
-| Tag Names | Green (`NSColor.systemGreen`) | `<root`, `<file` |
-| Attribute Names | Purple (`NSColor.systemPurple`) | `name`, `size` |
-| Attribute Values | Blue (`NSColor.systemBlue`) | `"README.md"`, `"1024"` |
-| XML Syntax | Gray (`NSColor.systemGray`) | `<`, `>`, `/` |
-
-## Key Design Decisions
-
-### 1. Metadata Format
-
-- **Size**: Displayed in bytes (not KB/MB) for consistency and accuracy
-- **Date Format**: "d-M-yyyy" for sortability and readability
-- **Default Values**: 0 for size, current date for modification if unavailable
-
-### 2. Syntax Highlighting
-
-- **Regular Expressions**: Used for pattern matching XML elements
-- **NSAttributedString**: Chosen for rich text formatting
-- **System Colors**: Use macOS system colors for automatic light/dark mode support
-- **Monospaced Font**: Maintains consistent character alignment
-- **Read-Only Display**: Prevents accidental editing while allowing text selection
-
-### 3. Backward Compatibility
-
-- Plain XML (without colors) is exported/copied for compatibility
-- Export and clipboard functions use the original `xmlOutput` string
-- Syntax highlighting is only for visual display within the app
-
-## 3. Progress Indicator Feature
+### 2. Progress Indicator Feature
 
 ### What Was Changed
 
-Added a real-time progress indicator that displays during XML generation for large directories, showing both a progress bar and item count.
+Added a progress indicator that displays during XML generation for large directories, showing both a progress bar and item count.
 
 ### Implementation Details
 
-- **File**: `XMLFolderStructure/ContentView.swift`
+- **File**: `XMLFolderStructure/ContentView.swift` and `XMLFolderStructure/XMLGenerator.swift`
 - **New Functions**: `countItems(at:)`, `buildXMLAsync(for:)`, `processDirectoryAsync(at:indentLevel:)`
 - **Functions Modified**: `generateXML()`
-- **Lines Added**: ~150 lines
 - **Localization**: Added "Processing:" and "items" strings to English and Spanish
 
 #### Components Added
@@ -216,15 +120,16 @@ private func generateXML() {
     // Run asynchronously in Task
     Task {
         // Count total items first
-        totalItems = countItems(at: directory)
+        totalItems = xmlGenerator.countItems(at: directory)
         
         // Generate XML with progress updates
-        let xml = try await buildXMLAsync(for: directory)
+        let xml = try await xmlGenerator.buildXMLAsync(for: directory)
         
         // Update UI on main thread
         await MainActor.run {
+            processedItems = totalItems
+            progressValue = 1.0
             xmlOutput = xml
-            highlightedXML = XMLSyntaxHighlighter.highlight(xml)
             isGenerating = false
         }
     }
@@ -271,15 +176,17 @@ await MainActor.run {
 - Progress updates happen on main thread but are minimal
 - Original synchronous functions kept for compatibility
 
-## Conclusion
+## Key Design Decisions
 
-All three features have been successfully implemented with minimal changes to the existing codebase:
+### 1. Metadata Format
 
-- ✅ File metadata adds valuable information to XML output
-- ✅ Syntax highlighting improves readability and user experience
-- ✅ Progress indicator provides feedback for large directory processing
-- ✅ Changes are focused and surgical
-- ✅ No existing functionality was broken
-- ✅ Documentation comprehensively updated
-- ✅ Code follows Swift and SwiftUI best practices
-- ✅ Proper use of async/await and MainActor for thread safety
+- **Size**: Displayed in bytes (not KB/MB) for consistency and accuracy
+- **Date Format**: "d-M-yyyy" for sortability and readability
+- **Default Values**: 0 for size, current date for modification if unavailable
+
+### 2. Display Performance
+
+- **Plain text**: Uses standard TextEditor for instant rendering
+- **Monospaced font**: Maintains XML readability and structure
+- **No formatting overhead**: Eliminates regex processing and attributed string creation
+- **Scalability**: Handles directories with tens of thousands of files without delay

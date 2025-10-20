@@ -13,7 +13,7 @@ XMLFolderStructure/
 ├── XMLFolderStructure/                 # Source code directory
 │   ├── XMLFolderStructureApp.swift     # Main app entry point
 │   ├── ContentView.swift               # Main UI and logic
-│   ├── XMLSyntaxHighlighter.swift      # XML text syntax highlight
+│   ├── XMLGenerator.swift		        # XML generator functions
 │   ├── XMLFolderStructure.entitlements # App permissions (file access)
 │   ├── Assets.xcassets/                # App icons and colors
 │   └── Preview Content/                # Preview assets for SwiftUI
@@ -31,7 +31,9 @@ XMLFolderStructure/
 
 ### ContentView.swift
 
-The main view containing all UI and business logic, including the SyntaxHighlightedTextView component:
+### ContentView.swift
+
+The main view containing all UI and business logic:
 
 #### UI Elements
 
@@ -43,11 +45,7 @@ The main view containing all UI and business logic, including the SyntaxHighligh
 
 2. **XML Output Section** (Bottom)
    - Label: "XML Output:"
-   - SyntaxHighlightedTextView: Displays generated XML with color-coded syntax highlighting
-     - Green: Tag names (root, folder, file)
-     - Purple: Attribute names (name, size, modified, text)
-     - Blue: Attribute values (in quotes)
-     - Gray: XML brackets and slashes
+   - TextEditor: Displays generated XML
    - ScrollView: Allows scrolling through long XML output
    - ProgressView: Linear progress bar displayed during XML generation (only visible when generating)
    - Progress Text: Shows "Processing: X / Y items" below the progress bar
@@ -57,8 +55,7 @@ The main view containing all UI and business logic, including the SyntaxHighligh
 #### State Management
 
 - `selectedDirectory`: Stores the URL of the selected directory
-- `xmlOutput`: Contains the generated XML string (plain text for export/clipboard)
-- `highlightedXML`: Contains the syntax-highlighted attributed string for display
+- `xmlOutput`: Contains the generated XML string
 - `errorMessage`: Holds error messages for display
 - `showError`: Controls error alert visibility
 - `isGenerating`: Indicates whether XML generation is in progress
@@ -84,6 +81,7 @@ The main view containing all UI and business logic, including the SyntaxHighligh
 - Counts total items before processing
 - Calls buildXMLAsync() for actual generation
 - Updates UI on main thread when complete
+- Displays XML output immediately after generation completes
 - Handles errors and displays error messages
 - Disables the Generate button during processing
 
@@ -151,18 +149,6 @@ The function is applied to all file size values in the XML generation, convertin
 - Examples: 1024 → 1.024, 1234567 → 1.234.567
 - Numbers below 1000 remain unchanged (e.g., 512 → 512)
 
-##### highlightXMLSyntax(_:)
-
-- Applies syntax highlighting to XML output
-- Uses NSAttributedString for rich text formatting
-- Color codes different XML elements:
-  - Tag names in green (systemGreen)
-  - Attribute names in purple (systemPurple)
-  - Attribute values in blue (systemBlue)
-  - Brackets and slashes in gray (systemGray)
-- Uses monospaced font for consistent formatting
-- Returns NSAttributedString for display
-
 ##### exportToFile()
 
 - Creates and configures NSSavePanel for file export
@@ -176,26 +162,6 @@ The function is applied to all file size values in the XML generation, convertin
 - Clears system clipboard
 - Copies XML output to clipboard using NSPasteboard
 - Allows easy pasting into other applications
-
-### SyntaxHighlightedTextView
-
-A custom SwiftUI view component that wraps NSTextView for displaying attributed text:
-
-#### Implementation
-
-- Conforms to NSViewRepresentable protocol
-- Creates a scrollable NSTextView instance
-- Configures text view properties:
-  - Non-editable but selectable
-  - Disables automatic text substitution features
-  - Uses system text background color
-- Updates content when attributed string binding changes
-
-#### Usage
-
-- Takes a binding to NSAttributedString
-- Automatically displays syntax-highlighted XML
-- Provides native macOS text view experience with scrolling
 
 ## Features
 
@@ -248,9 +214,9 @@ The app requires the following entitlements (defined in XMLFolderStructure.entit
 
 Recent additions to the application:
 
-- ✅ **File size and metadata in XML attributes**: Each file tag now includes size (in bytes) and modification date attributes
-- ✅ **Syntax highlighting for XML output**: The XML display now features color-coded syntax highlighting for improved readability
-- ✅ **Progress indicator for large directories**: Real-time progress bar and item counter displayed during XML generation
+- File size and metadata in XML attributes: Each file tag now includes size (in bytes) and modification date attributes
+- Progress indicator for large directories: Real-time progress bar and item counter displayed during XML generation
+- Fast XML display: XML output is displayed after generation without delay, optimized for large directories with thousands of files
 
 ## Future Enhancements
 

@@ -204,6 +204,11 @@ class XMLGenerator {
             }
             
             for item in sortedContents {
+               // Update progress for this item
+                processedItems += 1
+                let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
+                onProgressUpdate?(processedItems, progress)
+                
                 let resourceValues = try item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
                 let isDirectory = resourceValues.isDirectory ?? false
                 let name = xmlEscape(item.lastPathComponent)
@@ -229,11 +234,6 @@ class XMLGenerator {
                     
                     xml += "\(indent)<file name=\"\(name)\" size=\"\(formattedSize)\" modified=\"\(formattedDate)\" />\n"
                 }
-                
-                // Update progress
-                processedItems += 1
-                let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
-                onProgressUpdate?(processedItems, progress)
             }
         } catch {
             throw NSError(
