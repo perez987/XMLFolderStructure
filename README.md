@@ -34,7 +34,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
       <file name="nested_file.txt" size="512" modified="17-10-2024" />
     </folder>
   </folder>
-  <file name="root_file.txt" size="4.096" modified="18-10-2024" />
+  <file name="root_file.txt" size="3.440.640" modified="18-10-2024" />
 </xml>
 ```
 
