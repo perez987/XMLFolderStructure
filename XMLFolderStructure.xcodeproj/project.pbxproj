@@ -54,8 +54,8 @@
 				C01C03622E9F95ED00DF7A5C /* Localizable.strings */,
 				A100000F000000000000001 /* Preview Content */,
 				A100000A000000000000001 /* XMLFolderStructure.entitlements */,
-				C05887FC2EA5417A0088761B /* XMLGenerator.swift */,
 				A1000002000000000000001 /* XMLFolderStructureApp.swift */,
+				C05887FC2EA5417A0088761B /* XMLGenerator.swift */,
 			);
 			path = XMLFolderStructure;
 			sourceTree = "<group>";

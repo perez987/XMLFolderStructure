@@ -3,6 +3,7 @@
 ## Overview
 
 This document summarizes the implementation of features for the XMLFolderStructure macOS application:
+
 1. File size and modification date metadata in XML attributes
 2. Progress indicator for large directories
 3. Optimized XML display for fast rendering of large files
@@ -19,7 +20,6 @@ Modified the XML generation logic to include file size and modification date as 
 
 - **File**: `XMLFolderStructure/ContentView.swift`
 - **Functions Modified**: `processDirectory(at:indentLevel:)`
-- **Lines Changed**: ~10 lines
 
 **Before:**
 

@@ -75,7 +75,7 @@ class XMLGenerator {
         xml += "</root>\n"
         
         // Emit final progress update to ensure 100% is only reported when fully complete
-//        onProgressUpdate?(totalItems, 1.0)
+        onProgressUpdate?(totalItems, 1.0)
         
         return xml
     }
