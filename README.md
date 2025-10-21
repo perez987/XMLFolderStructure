@@ -4,9 +4,7 @@
 
 This macOS SwiftUI application retrieves the structure of a directory, including files and subfolders recursively, outputting the result in XML format.
 
-## Main window image
-
-[Main-window.md](Main-window.md)
+<img src="Images/Main-window.png" width="650px">
 
 ## Features
 
