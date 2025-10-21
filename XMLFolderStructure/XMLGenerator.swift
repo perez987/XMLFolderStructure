@@ -74,6 +74,9 @@ class XMLGenerator {
         // Closing tag
         xml += "</root>\n"
         
+        // Emit final progress update to ensure 100% is only reported when fully complete
+//        onProgressUpdate?(totalItems, 1.0)
+        
         return xml
     }
     
@@ -204,10 +207,13 @@ class XMLGenerator {
             }
             
             for item in sortedContents {
-               // Update progress for this item
+                // Update progress for this item
                 processedItems += 1
                 let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
                 onProgressUpdate?(processedItems, progress)
+                
+                // Yield to allow progress update to be processed by UI
+                await Task.yield()
                 
                 let resourceValues = try item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
                 let isDirectory = resourceValues.isDirectory ?? false

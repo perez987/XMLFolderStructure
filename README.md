@@ -6,10 +6,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 
 ## Main window image
 
-<p align="center">
-<img width="680" src="Images/Main-window.png">
-</p>
-<!-- [Main-window.md](Main-window.md) -->
+[Main-window.md](Main-window.md)
 
 ## Features
 
@@ -25,9 +22,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 
 ## XML Output Format
 
-There is no syntax highlighting because it is a very CPU-intensive task in large directories with tens of thousands of items.
-
-```
+```xml
 <root name="directory_name" text="Root directory">
   <folder name="subfolder1">
     <file name="file1.txt" size="1.024" modified="18-14-2024" />
@@ -36,7 +31,7 @@ There is no syntax highlighting because it is a very CPU-intensive task in large
       <file name="nested_file.txt" size="512" modified="17-10-2024" />
     </folder>
   </folder>
-  <file name="root_file.txt" size="3.440.640" modified="18-10-2024" />
+  <file name="root_file.txt" size="4.096" modified="18-10-2024" />
 </xml>
 ```
 
