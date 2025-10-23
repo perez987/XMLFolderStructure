@@ -7,10 +7,14 @@ struct ContentView: View {
     @State private var xmlOutput: String = ""
     @State private var errorMessage: String = ""
     @State private var showError: Bool = false
+    @State private var highlightedXML: NSAttributedString = NSAttributedString()
     @State private var isGenerating: Bool = false
     @State private var progressValue: Double = 0.0
     @State private var totalItems: Int = 0
     @State private var processedItems: Int = 0
+    @State private var directoryItemCount: Int = 0
+    @State private var directorySize: Int64 = 0
+    @State private var useSyntaxHighlighting: Bool = true
     
     private let xmlGenerator = XMLGenerator()
     
@@ -20,8 +24,7 @@ struct ContentView: View {
             VStack(spacing: 10) {
                 HStack {
                     Text(NSLocalizedString("Selected directory:", comment: ""))
-//                        .frame(width: 130, alignment: .leading)
-
+                    
                     TextField(NSLocalizedString("No directory selected:", comment: ""), text: .constant(selectedDirectory?.path ?? NSLocalizedString("No directory selected:", comment: "")))
                         .disabled(true)
 
@@ -44,10 +47,7 @@ struct ContentView: View {
                         ProgressView(value: progressValue, total: 1.0)
                             .progressViewStyle(.linear)
                             .frame(maxWidth: 400)
-                            // Text: Processing processed_items / total_number items
                         Text("\(NSLocalizedString("Processing:", comment: "")) \(processedItems) / \(totalItems) \(NSLocalizedString("items", comment: ""))")
-                            // Text: Directory contains total_number items
-//                        Text("\(NSLocalizedString("Directory contains:", comment: "")) \(totalItems) \(NSLocalizedString("items", comment: ""))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -63,10 +63,8 @@ struct ContentView: View {
                 Text(NSLocalizedString("XML Output:", comment: ""))
                     .font(.headline)
 
-                TextEditor(text: $xmlOutput)
-//                    .font(.system(.body, design: .monospaced))
-                    .font(.system(.callout))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    SyntaxHighlightedTextView(attributedString: $highlightedXML)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
                 // Export and clipboard buttons
                 HStack(spacing: 10) {
@@ -86,8 +84,6 @@ struct ContentView: View {
                 }
             }
             .padding(26)
-//            .padding(.horizontal)
-//            .padding(.bottom)
         }
         .frame(minWidth: 700, minHeight: 600)
         
@@ -98,6 +94,30 @@ struct ContentView: View {
         } message: {
             Text(errorMessage)
         }
+    }
+    
+    // MARK: - Alert Helper
+    
+    private func showWarningAlertWithIcon() {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Warning:", comment: "")
+        alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
+        alert.alertStyle = .warning
+        
+        // Set SF Symbol as icon
+        if let warningImage = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Warning") {
+            alert.icon = warningImage
+        }
+        
+        alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
+        
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            // Continue button clicked
+            performGenerateXML()
+        }
+        // If cancel or closed, do nothing
     }
     
     // MARK: - Directory Selection
@@ -125,11 +145,37 @@ struct ContentView: View {
             return
         }
         
+        // Count items and calculate size in the directory
+        directoryItemCount = xmlGenerator.countItems(at: directory)
+        directorySize = xmlGenerator.calculateDirectorySize(at: directory)
+        
+        // Determine if we should use syntax highlighting
+        useSyntaxHighlighting = directoryItemCount <= 12000
+        
+        // Only show warning if directory has more than 12000 items OR more than 1GB
+//        let oneGigabyte: Int64 = 1_073_741_824 // 1GB in bytes
+//        if directoryItemCount > 12000 || directorySize > oneGigabyte {
+        // Only show warning if directory has more than 12000 items
+        if directoryItemCount > 12000 {
+            showWarningAlertWithIcon()
+        } else {
+            // Directly generate XML if conditions are not met
+            performGenerateXML()
+        }
+    }
+    
+    private func performGenerateXML() {
+        guard let directory = selectedDirectory else {
+            showErrorMessage("No directory selected")
+            return
+        }
+        
         // Reset progress state
         isGenerating = true
         progressValue = 0.0
         processedItems = 0
         xmlOutput = ""
+        highlightedXML = NSAttributedString()
         
         // Set up progress callback	
 		xmlGenerator.onProgressUpdate = { processed, progress in
@@ -144,7 +190,7 @@ struct ContentView: View {
             do {
                 // Count total items first
                 await MainActor.run {
-                    totalItems = xmlGenerator.countItems(at: directory)
+                    totalItems = directoryItemCount
                 }
                 
                 // Generate XML with progress tracking
@@ -152,9 +198,18 @@ struct ContentView: View {
                 
                 // Update UI on main thread
                 await MainActor.run {
-                    processedItems = totalItems
-                    progressValue = 1.0
                     xmlOutput = xml
+                    // Apply syntax highlighting only if directory has <= 12000 items
+                    if useSyntaxHighlighting {
+                        highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+                    } else {
+                        // Use plain text without syntax highlighting
+                        let plainText = NSAttributedString(string: xml, attributes: [
+                            .font: NSFont.systemFont(ofSize: 12),
+                            .foregroundColor: NSColor.textColor
+                        ])
+                        highlightedXML = plainText
+                    }
                     isGenerating = false
                 }
             } catch {
@@ -197,7 +252,32 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Custom Syntax Highlighted Text View
 
+struct SyntaxHighlightedTextView: NSViewRepresentable {
+    @Binding var attributedString: NSAttributedString
+    
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSTextView.scrollableTextView()
+        let textView = scrollView.documentView as! NSTextView
+        
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.backgroundColor = NSColor.textBackgroundColor
+        textView.drawsBackground = true
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticLinkDetectionEnabled = false
+        textView.isAutomaticDataDetectionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        
+        return scrollView
+    }
+    
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        textView.textStorage?.setAttributedString(attributedString)
+    }
+}
 
 #Preview {
     ContentView()

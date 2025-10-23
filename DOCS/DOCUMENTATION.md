@@ -13,6 +13,7 @@ XMLFolderStructure/
 ├── XMLFolderStructure/                 # Source code directory
 │   ├── XMLFolderStructureApp.swift     # Main app entry point
 │   ├── ContentView.swift               # Main UI and logic
+│   ├── XMLSyntaxHighlighter.swift      # XML text syntax highlight
 │   ├── XMLGenerator.swift		        # XML generator functions
 │   ├── XMLFolderStructure.entitlements # App permissions (file access)
 │   ├── Assets.xcassets/                # App icons and colors
@@ -31,9 +32,7 @@ XMLFolderStructure/
 
 ### ContentView.swift
 
-### ContentView.swift
-
-The main view containing all UI and business logic:
+The main view containing all UI and business logic, including the SyntaxHighlightedTextView component:
 
 #### UI Elements
 
@@ -45,7 +44,11 @@ The main view containing all UI and business logic:
 
 2. **XML Output Section** (Bottom)
    - Label: "XML Output:"
-   - TextEditor: Displays generated XML
+   - SyntaxHighlightedTextView: Displays generated XML with color-coded syntax highlighting
+     - Green: Tag names (root, folder, file)
+     - Purple: Attribute names (name, size, modified, text)
+     - Blue: Attribute values (in quotes)
+     - Gray: XML brackets and slashes
    - ScrollView: Allows scrolling through long XML output
    - ProgressView: Linear progress bar displayed during XML generation (only visible when generating)
    - Progress Text: Shows "Processing: X / Y items" below the progress bar
@@ -55,51 +58,53 @@ The main view containing all UI and business logic:
 #### State Management
 
 - `selectedDirectory`: Stores the URL of the selected directory
-- `xmlOutput`: Contains the generated XML string
+- `xmlOutput`: Contains the generated XML string (plain text for export/clipboard)
+- `highlightedXML`: Contains the syntax-highlighted attributed string for display
 - `errorMessage`: Holds error messages for display
 - `showError`: Controls error alert visibility
 - `isGenerating`: Indicates whether XML generation is in progress
 - `progressValue`: Stores the progress percentage (0.0 to 1.0) for the progress bar
 - `totalItems`: Total count of items (files and folders) to process
 - `processedItems`: Count of items processed so far
+- `directoryItemCount`: Count of items in selected directory (for performance decisions)
+- `directorySize`: Total size of selected directory in bytes
+- `useSyntaxHighlighting`: Boolean flag to enable/disable syntax highlighting based on directory size
 
 #### Key Functions
 
-##### countItems(at:)
+##### XMLGenerator Methods
+
+The following methods are in the `XMLGenerator` class (XMLGenerator.swift):
+
+###### countItems(at:)
 
 - Counts the total number of files and folders in a directory recursively
 - Uses FileManager's enumerator for efficient traversal
 - Returns the total count for progress tracking
 - Skips hidden files (files starting with ".")
 
-##### generateXML()
+###### calculateDirectorySize(at:)
 
-- Entry point for XML generation
-- Guards against nil directory
-- Resets progress state and clears previous output
-- Runs XML generation asynchronously in a Task
-- Counts total items before processing
-- Calls buildXMLAsync() for actual generation
-- Updates UI on main thread when complete
-- Displays XML output immediately after generation completes
-- Handles errors and displays error messages
-- Disables the Generate button during processing
+- Calculates the total size of all files in a directory recursively
+- Uses FileManager's enumerator for efficient traversal
+- Returns total size in bytes
+- Skips hidden files and only counts file sizes (not directories)
 
-##### buildXML(for:)
+###### buildXML(for:)
 
 - Synchronous XML building function (kept for compatibility)
 - Creates root tag with directory name
 - Calls processDirectory() recursively
 - Returns complete XML string
 
-##### buildXMLAsync(for:)
+###### buildXMLAsync(for:)
 
 - Asynchronous version of buildXML
 - Creates root tag with directory name
 - Calls processDirectoryAsync() recursively with progress tracking
 - Returns complete XML string
 
-##### processDirectory(at:indentLevel:)
+###### processDirectory(at:indentLevel:)
 
 - Synchronously processes directory contents (kept for compatibility)
 - Recursively processes directory contents
@@ -111,7 +116,7 @@ The main view containing all UI and business logic:
 - Maintains proper indentation based on nesting level
 - Handles file system errors
 
-##### processDirectoryAsync(at:indentLevel:)
+###### processDirectoryAsync(at:indentLevel:)
 
 - Asynchronous version with progress tracking
 - Recursively processes directory contents
@@ -121,12 +126,12 @@ The main view containing all UI and business logic:
   - `<folder name="...">` for directories
   - `<file name="..." size="..." modified="..." />` for files with metadata
 - Maintains proper indentation based on nesting level
-- Updates progress after processing each item on MainActor
+- Updates progress via callback after processing each item
 - Handles file system errors
 
-##### formatFileSize(_:)
+###### formatFileSize(_:)
 
-Added a `formatFileSize(_:)` helper function in `ContentView.swift` that uses `NumberFormatter` to format file sizes with dots as thousands separators:
+A helper function in `XMLGenerator.swift` that uses `NumberFormatter` to format file sizes with dots as thousands separators:
 
 ```swift
 private func formatFileSize(_ size: Int) -> String {
@@ -137,6 +142,7 @@ private func formatFileSize(_ size: Int) -> String {
     formatter.groupingSeparator = "."
     formatter.groupingSize = 3
     formatter.usesGroupingSeparator = true
+    formatter.hasThousandSeparators = true
     return formatter.string(from: NSNumber(value: size)) ?? "\(size)"
 }
 ```
@@ -149,7 +155,58 @@ The function is applied to all file size values in the XML generation, convertin
 - Examples: 1024 → 1.024, 1234567 → 1.234.567
 - Numbers below 1000 remain unchanged (e.g., 512 → 512)
 
-##### exportToFile()
+##### ContentView Methods
+
+The following methods are in the `ContentView` struct (ContentView.swift):
+
+###### generateXML()
+
+- Entry point for XML generation
+- Guards against nil directory
+- Counts total items and calculates directory size using XMLGenerator
+- Determines if syntax highlighting should be used (based on 10,000 item threshold)
+- Shows warning dialog if directory has more than 10,000 items
+- Calls performGenerateXML() to proceed with generation
+
+###### performGenerateXML()
+
+- Resets progress state and clears previous output
+- Sets up progress callback with XMLGenerator
+- Runs XML generation asynchronously in a Task
+- Calls XMLGenerator's buildXMLAsync() for actual generation
+- Updates UI on main thread when complete
+- Conditionally applies syntax highlighting based on useSyntaxHighlighting flag
+- Handles errors and displays error messages
+- Disables the Generate button during processing
+
+###### showWarningAlertWithIcon()
+
+- Creates and displays a warning dialog for large directories
+- Shows directory item count
+- Explains performance implications
+- Provides Continue/Cancel options
+- Uses SF Symbol for warning icon
+
+##### XMLSyntaxHighlighter Methods
+
+The following method is in the `XMLSyntaxHighlighter` class (XMLSyntaxHighlighter.swift):
+
+###### highlight(_:)
+
+- Applies syntax highlighting to XML output
+- Uses NSAttributedString for rich text formatting
+- Color codes different XML elements:
+  - Tag names in green (systemGreen)
+  - Attribute names in purple (systemPurple)
+  - Attribute values in blue (systemBlue)
+  - Brackets and slashes in gray (systemGray)
+- Uses system font for consistency
+- Returns NSAttributedString for display
+- Implemented as a static method in XMLSyntaxHighlighter class
+
+###### exportToFile()
+
+In ContentView.swift:
 
 - Creates and configures NSSavePanel for file export
 - Sets default filename to "folder_structure.xml"
@@ -157,11 +214,66 @@ The function is applied to all file size values in the XML generation, convertin
 - Writes XML output to selected file location
 - Displays error message if save fails
 
-##### copyToClipboard()
+###### copyToClipboard()
+
+In ContentView.swift:
 
 - Clears system clipboard
 - Copies XML output to clipboard using NSPasteboard
 - Allows easy pasting into other applications
+
+### Syntax highlighting threshold to prevent freezing with large directories
+
+XML syntax highlighting feature uses regex operations that can become extremely slow with large XML outputs. This can cause the app to freeze or become unresponsive. A fork in the XML display logic based on directory item count has been implemented, by conditionally disabling syntax highlighting for directories with more than 10000 items:
+
+- Directories ≤ 10000 items: Full color syntax highlighting
+- Directories > 10000 items: Plain text display
+
+For directories with > 10000 items:
+
+- Warning dialog appears with updated message explaining:
+	- Potential app freezing with large directories
+	- XML will be displayed without syntax highlighting
+- User can choose to Continue or Cancel
+- If continuing, XML generates and displays as readable plain text
+
+##### ContentView.swift
+
+- Added `useSyntaxHighlighting` state variable to track highlighting preference
+- Set the flag in `generateXML()` based on item count: useSyntaxHighlighting = directoryItemCount <= 10000
+- Modified `performGenerateXML()` to conditionally apply syntax highlighting:
+
+```swift
+if useSyntaxHighlighting {
+    highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+} else {
+    let plainText = NSAttributedString(string: xml, attributes: [
+        .font: NSFont.systemFont(ofSize: 12),
+        .foregroundColor: NSColor.textColor
+    ])
+    highlightedXML = plainText
+}
+```
+
+### SyntaxHighlightedTextView
+
+A custom SwiftUI view component that wraps NSTextView for displaying attributed text:
+
+#### Implementation
+
+- Conforms to NSViewRepresentable protocol
+- Creates a scrollable NSTextView instance
+- Configures text view properties:
+  - Non-editable but selectable
+  - Disables automatic text substitution features
+  - Uses system text background color
+- Updates content when attributed string binding changes
+
+#### Usage
+
+- Takes a binding to NSAttributedString
+- Automatically displays syntax-highlighted XML
+- Provides native macOS text view experience with scrolling
 
 ## Features
 
@@ -214,9 +326,13 @@ The app requires the following entitlements (defined in XMLFolderStructure.entit
 
 Recent additions to the application:
 
-- File size and metadata in XML attributes: Each file tag now includes size (in bytes) and modification date attributes
-- Progress indicator for large directories: Real-time progress bar and item counter displayed during XML generation
-- Fast XML display: XML output is displayed after generation without delay, optimized for large directories with thousands of files
+- ✅ **File size and metadata in XML attributes**: Each file tag now includes size (in bytes with dot separators) and modification date attributes
+- ✅ **Syntax highlighting for XML output**: The XML display features color-coded syntax highlighting for improved readability
+- ✅ **Progress indicator for large directories**: Real-time progress bar and item counter displayed during XML generation
+- ✅ **Performance optimization**: Conditional syntax highlighting based on directory size (>10,000 items)
+- ✅ **Warning dialog**: User notification for large directories with performance implications
+- ✅ **Modular architecture**: Code refactored into XMLGenerator and XMLSyntaxHighlighter classes
+- ✅ **Directory size calculation**: Pre-flight analysis of directory size for performance decisions
 
 ## Future Enhancements
 

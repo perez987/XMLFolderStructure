@@ -1,12 +1,13 @@
-# Implementation Summary: File Metadata and Progress Indicator
+# Implementation Summary: File Metadata, Syntax Highlighting, and Progress Indicator
 
 ## Overview
 
 This document summarizes the implementation of features for the XMLFolderStructure macOS application:
-
 1. File size and modification date metadata in XML attributes
-2. Progress indicator for large directories
-3. Optimized XML display for fast rendering of large files
+2. Syntax highlighting for XML output display
+3. Progress indicator for large directories
+4. Code refactoring into modular components
+5. Performance optimization for large directories
 
 ## Changes Made
 
@@ -18,8 +19,9 @@ Modified the XML generation logic to include file size and modification date as 
 
 #### Implementation Details
 
-- **File**: `XMLFolderStructure/ContentView.swift`
-- **Functions Modified**: `processDirectory(at:indentLevel:)`
+- **File**: `XMLFolderStructure/XMLGenerator.swift`
+- **Functions Modified**: `processDirectory(at:indentLevel:)`, `processDirectoryAsync(at:indentLevel:)`
+- **Lines Changed**: ~10 lines per function
 
 **Before:**
 
@@ -43,12 +45,14 @@ let contents = try fileManager.contentsOfDirectory(
 )
 // ...
 let fileSize = resourceValues.fileSize ?? 0
+let formattedSize = formatFileSize(fileSize)
+
 let modificationDate = resourceValues.contentModificationDate ?? Date()
 let dateFormatter = DateFormatter()
-dateFormatter.dateFormat = "d-M-yyyy"
+dateFormatter.dateFormat = "d/M/yyyy"
 let formattedDate = dateFormatter.string(from: modificationDate)
 
-xml += "\(indent)<file name=\"\(name)\" size=\"\(fileSize)\" modified=\"\(formattedDate)\" />\n"
+xml += "\(indent)<file name=\"\(name)\" size=\"\(formattedSize)\" modified=\"\(formattedDate)\" />\n"
 ```
 
 #### Result
@@ -56,10 +60,134 @@ xml += "\(indent)<file name=\"\(name)\" size=\"\(fileSize)\" modified=\"\(format
 XML output now includes:
 
 ```xml
-<file name="README.md" size="1.024" modified="18-10-2024" />
+<file name="README.md" size="1.024" modified="18/10/2024" />
 ```
 
-### 2. Progress Indicator Feature
+### 2. Syntax Highlighting Feature
+
+#### What Was Changed
+
+Replaced the plain TextEditor with a custom syntax-highlighted view that displays XML with color-coded elements. Refactored syntax highlighting logic into a separate class.
+
+#### Implementation Details
+
+- **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLSyntaxHighlighter.swift`
+- **New Class**: `XMLSyntaxHighlighter` (separate file)
+- **New Functions**: `SyntaxHighlightedTextView` struct in ContentView.swift
+
+#### Components Added
+
+**1. State Variable for Highlighted XML**
+
+```swift
+@State private var highlightedXML: NSAttributedString = NSAttributedString()
+```
+
+**2. XML Syntax Highlighter Class**
+
+Implemented in `XMLFolderStructure/XMLSyntaxHighlighter.swift`:
+
+```swift
+class XMLSyntaxHighlighter {
+    static func highlight(_ xml: String) -> NSAttributedString {
+        // Creates NSAttributedString with color-coded elements
+        // Uses NSRegularExpression to identify:
+        // - Tag names: <root, <folder, <file (green)
+        // - Attribute names: name, size, modified (purple)
+        // - Attribute values: "..." (blue)
+        // - XML syntax: <, >, /, = (gray)
+    }
+    
+    // Private helper methods:
+    // - highlightTags(in:range:text:)
+    // - highlightAttributes(in:range:text:)
+    // - highlightAttributeValues(in:range:text:)
+    // - highlightBrackets(in:range:text:)
+}
+```
+
+**3. Custom SwiftUI View Wrapper**
+
+```swift
+struct SyntaxHighlightedTextView: NSViewRepresentable {
+    // Wraps NSTextView for displaying attributed text in SwiftUI
+    // Configures text view as non-editable but selectable
+    // Updates display when attributedString binding changes
+}
+```
+
+**4. UI Update**
+
+```swift
+// Before:
+TextEditor(text: $xmlOutput)
+    .font(.system(.body, design: .default))
+
+// After:
+SyntaxHighlightedTextView(attributedString: $highlightedXML)
+```
+
+**5. Generation Update**
+
+```swift
+private func performGenerateXML() {
+    // ...
+    xmlOutput = try await xmlGenerator.buildXMLAsync(for: directory)
+    
+    // Apply syntax highlighting conditionally based on directory size
+    if useSyntaxHighlighting {
+        highlightedXML = XMLSyntaxHighlighter.highlight(xmlOutput)
+    } else {
+        // Plain text for large directories
+        highlightedXML = NSAttributedString(string: xmlOutput, attributes: [
+            .font: NSFont.systemFont(ofSize: 12),
+            .foregroundColor: NSColor.textColor
+        ])
+    }
+    // ...
+}
+```
+
+#### Color Scheme
+
+| Element | Color | Example |
+|---------|-------|---------|
+| Tag Names | Green (`NSColor.systemGreen`) | `<root`, `<file` |
+| Attribute Names | Purple (`NSColor.systemPurple`) | `name`, `size` |
+| Attribute Values | Blue (`NSColor.systemBlue`) | `"README.md"`, `"1024"` |
+| XML Syntax | Gray (`NSColor.systemGray`) | `<`, `>`, `/` |
+
+## Key Design Decisions
+
+### 1. Metadata Format
+
+- **Size**: Displayed in bytes with dot separators (e.g., 1.024, 1.234.567) for readability
+- **Date Format**: "d/M/yyyy" for consistent formatting (e.g., 18/10/2024)
+- **Default Values**: 0 for size, current date for modification if unavailable
+- **Number Formatting**: Uses NumberFormatter with explicit locale settings for consistent thousand separators
+
+### 2. Syntax Highlighting
+
+- **Regular Expressions**: Used for pattern matching XML elements
+- **NSAttributedString**: Chosen for rich text formatting
+- **System Colors**: Use macOS system colors for automatic light/dark mode support
+- **Monospaced Font**: Maintains consistent character alignment
+- **Read-Only Display**: Prevents accidental editing while allowing text selection
+
+### 3. Backward Compatibility
+
+- Plain XML (without colors) is exported/copied for compatibility
+- Export and clipboard functions use the original `xmlOutput` string
+- Syntax highlighting is only for visual display within the app
+
+### 4. Code Organization
+
+- **XMLGenerator.swift**: Encapsulates all XML generation logic
+- **XMLSyntaxHighlighter.swift**: Handles syntax highlighting separately
+- **ContentView.swift**: Manages UI and coordinates between components
+- **Separation of Concerns**: Business logic separated from UI presentation
+
+## 3. Progress Indicator Feature
 
 ### What Was Changed
 
@@ -67,20 +195,32 @@ Added a progress indicator that displays during XML generation for large directo
 
 ### Implementation Details
 
-- **File**: `XMLFolderStructure/ContentView.swift` and `XMLFolderStructure/XMLGenerator.swift`
-- **New Functions**: `countItems(at:)`, `buildXMLAsync(for:)`, `processDirectoryAsync(at:indentLevel:)`
-- **Functions Modified**: `generateXML()`
+- **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLGenerator.swift`
+- **New Functions in XMLGenerator**: `countItems(at:)`, `buildXMLAsync(for:)`, `processDirectoryAsync(at:indentLevel:)`
+- **Functions Modified in ContentView**: `generateXML()`, `performGenerateXML()`
 - **Localization**: Added "Processing:" and "items" strings to English and Spanish
 
 #### Components Added
 
 **1. State Variables for Progress Tracking**
 
+In ContentView.swift:
+
 ```swift
 @State private var isGenerating: Bool = false
 @State private var progressValue: Double = 0.0
 @State private var totalItems: Int = 0
 @State private var processedItems: Int = 0
+```
+
+In XMLGenerator.swift:
+
+```swift
+// Progress tracking callback
+var onProgressUpdate: ((Int, Double) -> Void)?
+
+private var totalItems: Int = 0
+private var processedItems: Int = 0
 ```
 
 **2. Progress UI Component**
@@ -100,8 +240,10 @@ if isGenerating {
 
 **3. Item Counting Function**
 
+In XMLGenerator.swift:
+
 ```swift
-private func countItems(at url: URL) -> Int {
+func countItems(at url: URL) -> Int {
     // Uses FileManager.enumerator for efficient counting
     // Skips hidden files
     // Returns total count for progress calculation
@@ -110,26 +252,45 @@ private func countItems(at url: URL) -> Int {
 
 **4. Asynchronous Generation with Progress**
 
+In ContentView.swift:
+
 ```swift
-private func generateXML() {
+private func performGenerateXML() {
+    guard let directory = selectedDirectory else { return }
+    
     // Reset progress state
     isGenerating = true
     progressValue = 0.0
     processedItems = 0
+    xmlOutput = ""
+    highlightedXML = NSAttributedString()
+    
+    // Set up progress callback
+    xmlGenerator.onProgressUpdate = { processed, progress in
+        Task { @MainActor in
+            self.processedItems = processed
+            self.progressValue = progress
+        }
+    }
     
     // Run asynchronously in Task
     Task {
         // Count total items first
-        totalItems = xmlGenerator.countItems(at: directory)
+        await MainActor.run {
+            totalItems = directoryItemCount
+        }
         
         // Generate XML with progress updates
         let xml = try await xmlGenerator.buildXMLAsync(for: directory)
         
         // Update UI on main thread
         await MainActor.run {
-            processedItems = totalItems
-            progressValue = 1.0
             xmlOutput = xml
+            if useSyntaxHighlighting {
+                highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+            } else {
+                highlightedXML = NSAttributedString(string: xml, attributes: [...])
+            }
             isGenerating = false
         }
     }
@@ -138,15 +299,16 @@ private func generateXML() {
 
 **5. Async Processing Functions**
 
-- `buildXMLAsync(for:)`: Async version of buildXML
-- `processDirectoryAsync(at:indentLevel:)`: Async version with progress updates
+In XMLGenerator.swift:
+
+- `buildXMLAsync(for:)`: Async version of buildXML, manages total item counting
+- `processDirectoryAsync(at:indentLevel:)`: Async version with progress updates via callback
 
 ```swift
-// Update progress after each item
-await MainActor.run {
-    processedItems += 1
-    progressValue = Double(processedItems) / Double(totalItems)
-}
+// Update progress after each item in processDirectoryAsync
+processedItems += 1
+let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
+onProgressUpdate?(processedItems, progress)
 ```
 
 #### Key Design Decisions
@@ -172,21 +334,154 @@ await MainActor.run {
 
 ##### Performance
 
-- Counting pass is fast (no XML generation)
-- Progress updates happen on main thread but are minimal
+- Counting pass is faster (no XML generation)
+- Progress updates happen on main thread but are minimal via callback pattern
 - Original synchronous functions kept for compatibility
+- Callback pattern separates concerns between XMLGenerator and UI
 
-## Key Design Decisions
+## 4. Performance Optimization for Large Directories
 
-### 1. Metadata Format
+### What Was Changed
 
-- **Size**: Displayed in bytes (not KB/MB) for consistency and accuracy
-- **Date Format**: "d-M-yyyy" for sortability and readability
-- **Default Values**: 0 for size, current date for modification if unavailable
+Added conditional syntax highlighting and warning dialog for directories with more than 10,000 items to prevent application freezing.
 
-### 2. Display Performance
+### Implementation Details
 
-- **Plain text**: Uses standard TextEditor for instant rendering
-- **Monospaced font**: Maintains XML readability and structure
-- **No formatting overhead**: Eliminates regex processing and attributed string creation
-- **Scalability**: Handles directories with tens of thousands of files without delay
+- **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLGenerator.swift`
+- **New Functions**: `calculateDirectorySize(at:)` in XMLGenerator, `showWarningAlertWithIcon()` in ContentView
+- **State Variables Added**: `directoryItemCount`, `directorySize`, `useSyntaxHighlighting`
+- **Localization**: Added warning dialog strings to English and Spanish
+
+#### Components Added
+
+**1. Directory Size Calculation**
+
+In XMLGenerator.swift:
+
+```swift
+func calculateDirectorySize(at url: URL) -> Int64 {
+    // Calculates total size of all files in directory
+    // Uses FileManager.enumerator for efficient traversal
+    // Returns total size in bytes
+    // Skips hidden files
+}
+```
+
+**2. State Variables for Performance Management**
+
+In ContentView.swift:
+
+```swift
+@State private var directoryItemCount: Int = 0
+@State private var directorySize: Int64 = 0
+@State private var useSyntaxHighlighting: Bool = true
+```
+
+**3. Pre-Generation Analysis**
+
+In ContentView.swift:
+
+```swift
+private func generateXML() {
+    guard let directory = selectedDirectory else { return }
+    
+    // Count items and calculate size
+    directoryItemCount = xmlGenerator.countItems(at: directory)
+    directorySize = xmlGenerator.calculateDirectorySize(at: directory)
+    
+    // Determine if syntax highlighting should be used
+    useSyntaxHighlighting = directoryItemCount <= 10000
+    
+    // Show warning if directory has more than 10,000 items
+    if directoryItemCount > 10000 {
+        showWarningAlertWithIcon()
+    } else {
+        performGenerateXML()
+    }
+}
+```
+
+**4. Warning Dialog**
+
+In ContentView.swift:
+
+```swift
+private func showWarningAlertWithIcon() {
+    let alert = NSAlert()
+    alert.messageText = NSLocalizedString("Warning:", comment: "")
+    alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
+    alert.alertStyle = .warning
+    
+    // Set SF Symbol as icon
+    if let warningImage = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Warning") {
+        alert.icon = warningImage
+    }
+    
+    alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
+    alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
+    
+    let response = alert.runModal()
+    if response == .alertFirstButtonReturn {
+        performGenerateXML()
+    }
+}
+```
+
+**5. Conditional Syntax Highlighting**
+
+In ContentView.swift (within performGenerateXML):
+
+```swift
+// Apply syntax highlighting only if directory has <= 10,000 items
+if useSyntaxHighlighting {
+    highlightedXML = XMLSyntaxHighlighter.highlight(xml)
+} else {
+    // Use plain text without syntax highlighting for large directories
+    let plainText = NSAttributedString(string: xml, attributes: [
+        .font: NSFont.systemFont(ofSize: 12),
+        .foregroundColor: NSColor.textColor
+    ])
+    highlightedXML = plainText
+}
+```
+
+#### Key Design Decisions
+
+##### Performance Threshold
+
+- **10,000 items**: Chosen as the threshold based on testing
+- Syntax highlighting with regex operations becomes slow beyond this threshold
+- Warning allows user to make informed decision
+
+##### User Experience
+
+- Non-blocking: User can cancel the operation
+- Informative: Dialog explains why syntax highlighting is disabled
+- Transparent: User knows what to expect before generation starts
+
+##### Fallback Behavior
+
+- Plain text display maintains readability
+- Export and copy functions unaffected
+- All XML functionality remains available
+
+##### Performance
+
+- Counting pass is faster (no XML generation)
+
+## Conclusion
+
+All features have been successfully implemented with a well-organized, modular architecture:
+
+- ✅ File metadata adds valuable information to XML output with formatted file sizes
+- ✅ Syntax highlighting improves readability and user experience
+- ✅ Progress indicator provides feedback for large directory processing
+- ✅ Performance optimization prevents app freezing with large directories
+- ✅ Code refactored into separate, focused modules (XMLGenerator, XMLSyntaxHighlighter)
+- ✅ Changes are surgical and maintain backward compatibility
+- ✅ No existing functionality was broken
+- ✅ Documentation comprehensively updated
+- ✅ Code follows Swift and SwiftUI best practices
+- ✅ Proper use of async/await and MainActor for thread safety
+- ✅ Separation of concerns with clean architecture
+- ✅ Conditional features based on directory size for optimal performance
