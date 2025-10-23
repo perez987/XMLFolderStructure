@@ -1,7 +1,7 @@
 # Structure of a directory as XML in SwiftUI
 
 <p align="center">
-<img width="650" src="Images/Main-window.png">
+<img width="650" src="Images/Dark/Main-window.png">
 </p>
 
 This macOS SwiftUI application retrieves the structure of a directory, including files and subfolders recursively, outputting the result in XML format.
