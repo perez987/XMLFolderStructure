@@ -10,4 +10,4 @@
 "Warning:" = "Advertencia";
 "Cancel:" = "Cancelar";
 "Continue:" = "Continuar";
-"WarningMessage:" = "El directorio seleccionado contiene %d elementos.\n\nLa aplicación funciona bien con directorios de hasta 12.000 elementos, pero puede congelarse con directorios más grandes.\n\nEl texto XML no se coloreará cuando el directorio tenga más de 12.000 elementos.\n\n¿Desea continuar?";
+"WarningMessage:" = "El directorio seleccionado contiene %d elementos.\n\nLa aplicación funciona bien con directorios de hasta 10.000 elementos, pero puede congelarse con directorios más grandes.\n\nEl texto XML no se coloreará cuando el directorio tenga más de 10.000 elementos.\n\n¿Desea continuar?";

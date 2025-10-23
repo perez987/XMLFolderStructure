@@ -150,13 +150,13 @@ struct ContentView: View {
         directorySize = xmlGenerator.calculateDirectorySize(at: directory)
         
         // Determine if we should use syntax highlighting
-        useSyntaxHighlighting = directoryItemCount <= 12000
+        useSyntaxHighlighting = directoryItemCount <= 10000
         
-        // Only show warning if directory has more than 12000 items OR more than 1GB
+        // Only show warning if directory has more than 10000 items OR more than 1GB
 //        let oneGigabyte: Int64 = 1_073_741_824 // 1GB in bytes
-//        if directoryItemCount > 12000 || directorySize > oneGigabyte {
+//        if directoryItemCount > 10000 || directorySize > oneGigabyte {
         // Only show warning if directory has more than 12000 items
-        if directoryItemCount > 12000 {
+        if directoryItemCount > 10000 {
             showWarningAlertWithIcon()
         } else {
             // Directly generate XML if conditions are not met
@@ -199,7 +199,7 @@ struct ContentView: View {
                 // Update UI on main thread
                 await MainActor.run {
                     xmlOutput = xml
-                    // Apply syntax highlighting only if directory has <= 12000 items
+                    // Apply syntax highlighting only if directory has <= 10000 items
                     if useSyntaxHighlighting {
                         highlightedXML = XMLSyntaxHighlighter.highlight(xml)
                     } else {
