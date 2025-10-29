@@ -185,7 +185,8 @@ The following methods are in the `ContentView` struct (ContentView.swift):
 - Shows directory item count
 - Explains performance implications
 - Provides Continue/Cancel options
-- Uses SF Symbol for warning icon
+- Uses standard system warning icon (not SF Symbol)
+- Includes rendering fixes for macOS 15+ (Sequoia/Tahoe) to ensure buttons are visible immediately
 
 ##### XMLSyntaxHighlighter Methods
 
@@ -321,18 +322,6 @@ The app requires the following entitlements (defined in XMLFolderStructure.entit
 2. Select a Mac as the target device
 3. Build: Product > Build (⌘B)
 4. Run: Product > Run (⌘R)
-
-## Implemented Enhancements
-
-Recent additions to the application:
-
-- ✅ **File size and metadata in XML attributes**: Each file tag now includes size (in bytes with dot separators) and modification date attributes
-- ✅ **Syntax highlighting for XML output**: The XML display features color-coded syntax highlighting for improved readability
-- ✅ **Progress indicator for large directories**: Real-time progress bar and item counter displayed during XML generation
-- ✅ **Performance optimization**: Conditional syntax highlighting based on directory size (>10,000 items)
-- ✅ **Warning dialog**: User notification for large directories with performance implications
-- ✅ **Modular architecture**: Code refactored into XMLGenerator and XMLSyntaxHighlighter classes
-- ✅ **Directory size calculation**: Pre-flight analysis of directory size for performance decisions
 
 ## Future Enhancements
 

@@ -1,23 +1,20 @@
 # Implementation Summary: File Metadata, Syntax Highlighting, and Progress Indicator
 
-## Overview
-
 This document summarizes the implementation of features for the XMLFolderStructure macOS application:
+
 1. File size and modification date metadata in XML attributes
 2. Syntax highlighting for XML output display
 3. Progress indicator for large directories
 4. Code refactoring into modular components
 5. Performance optimization for large directories
 
-## Changes Made
+## 1. File Metadata Feature
 
-### 1. File Metadata Feature
-
-#### What Was Changed
+### What Was Changed
 
 Modified the XML generation logic to include file size and modification date as attributes on `<file>` elements.
 
-#### Implementation Details
+### Implementation Details
 
 - **File**: `XMLFolderStructure/XMLGenerator.swift`
 - **Functions Modified**: `processDirectory(at:indentLevel:)`, `processDirectoryAsync(at:indentLevel:)`
@@ -55,7 +52,7 @@ let formattedDate = dateFormatter.string(from: modificationDate)
 xml += "\(indent)<file name=\"\(name)\" size=\"\(formattedSize)\" modified=\"\(formattedDate)\" />\n"
 ```
 
-#### Result
+### Result
 
 XML output now includes:
 
@@ -63,19 +60,19 @@ XML output now includes:
 <file name="README.md" size="1.024" modified="18/10/2024" />
 ```
 
-### 2. Syntax Highlighting Feature
+## 2. Syntax Highlighting Feature
 
-#### What Was Changed
+### What Was Changed
 
 Replaced the plain TextEditor with a custom syntax-highlighted view that displays XML with color-coded elements. Refactored syntax highlighting logic into a separate class.
 
-#### Implementation Details
+### Implementation Details
 
 - **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLSyntaxHighlighter.swift`
 - **New Class**: `XMLSyntaxHighlighter` (separate file)
 - **New Functions**: `SyntaxHighlightedTextView` struct in ContentView.swift
 
-#### Components Added
+### Components Added
 
 **1. State Variable for Highlighted XML**
 
@@ -88,22 +85,37 @@ Replaced the plain TextEditor with a custom syntax-highlighted view that display
 Implemented in `XMLFolderStructure/XMLSyntaxHighlighter.swift`:
 
 ```swift
-class XMLSyntaxHighlighter {
+class XMLSyntaxHighlighter {    
+    /// Applies syntax highlighting to XML text
+    /// - Parameter xml: The XML string to highlight
+    /// - Returns: An NSAttributedString with color-coded XML elements
     static func highlight(_ xml: String) -> NSAttributedString {
-        // Creates NSAttributedString with color-coded elements
-        // Uses NSRegularExpression to identify:
-        // - Tag names: <root, <folder, <file (green)
-        // - Attribute names: name, size, modified (purple)
-        // - Attribute values: "..." (blue)
-        // - XML syntax: <, >, /, = (gray)
-    }
-    
-    // Private helper methods:
-    // - highlightTags(in:range:text:)
-    // - highlightAttributes(in:range:text:)
-    // - highlightAttributeValues(in:range:text:)
-    // - highlightBrackets(in:range:text:)
-}
+			// Creates NSAttributedString with color-coded elements
+			// Uses NSRegularExpression to identify:
+			// - Tag names: <root, <folder, <file (green)
+			// - Attribute names: name, size, modified (purple)
+			// - Attribute values: "..." (blue)
+			// - XML syntax: <, >, /, = (gray)
+        let attributedString = NSMutableAttributedString(string: xml)
+        let fullRange = NSRange(location: 0, length: xml.utf16.count)
+        
+        // Base font and color
+//        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        let font = NSFont.systemFont(ofSize: 12)
+        attributedString.addAttribute(.font, value: font, range: fullRange)
+        attributedString.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        
+            // Private helper methods:
+			// - highlightTags(in:range:text:)
+			// - highlightAttributes(in:range:text:)
+			// - highlightAttributeValues(in:range:text:)
+			// - highlightBrackets(in:range:text:)
+
+        // Apply syntax highlighting in order
+        highlightTags(in: attributedString, range: fullRange, text: xml)
+        highlightAttributes(in: attributedString, range: fullRange, text: xml)
+        highlightAttributeValues(in: attributedString, range: fullRange, text: xml)
+        highlightBrackets(in: attributedString, range: fullRange, text: xml)
 ```
 
 **3. Custom SwiftUI View Wrapper**
@@ -148,7 +160,7 @@ private func performGenerateXML() {
 }
 ```
 
-#### Color Scheme
+### Color Scheme
 
 | Element | Color | Example |
 |---------|-------|---------|
@@ -157,7 +169,7 @@ private func performGenerateXML() {
 | Attribute Values | Blue (`NSColor.systemBlue`) | `"README.md"`, `"1024"` |
 | XML Syntax | Gray (`NSColor.systemGray`) | `<`, `>`, `/` |
 
-## Key Design Decisions
+## 3. Key Design Decisions
 
 ### 1. Metadata Format
 
@@ -166,7 +178,7 @@ private func performGenerateXML() {
 - **Default Values**: 0 for size, current date for modification if unavailable
 - **Number Formatting**: Uses NumberFormatter with explicit locale settings for consistent thousand separators
 
-### 2. Syntax Highlighting
+#### 2. Syntax Highlighting
 
 - **Regular Expressions**: Used for pattern matching XML elements
 - **NSAttributedString**: Chosen for rich text formatting
@@ -174,22 +186,20 @@ private func performGenerateXML() {
 - **Monospaced Font**: Maintains consistent character alignment
 - **Read-Only Display**: Prevents accidental editing while allowing text selection
 
-### 3. Backward Compatibility
+#### 3. Backward Compatibility
 
 - Plain XML (without colors) is exported/copied for compatibility
 - Export and clipboard functions use the original `xmlOutput` string
 - Syntax highlighting is only for visual display within the app
 
-### 4. Code Organization
+#### 4. Code Organization
 
 - **XMLGenerator.swift**: Encapsulates all XML generation logic
 - **XMLSyntaxHighlighter.swift**: Handles syntax highlighting separately
 - **ContentView.swift**: Manages UI and coordinates between components
 - **Separation of Concerns**: Business logic separated from UI presentation
 
-## 3. Progress Indicator Feature
-
-### What Was Changed
+## 4. Progress Indicator Feature
 
 Added a progress indicator that displays during XML generation for large directories, showing both a progress bar and item count.
 
@@ -311,7 +321,7 @@ let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.
 onProgressUpdate?(processedItems, progress)
 ```
 
-#### Key Design Decisions
+### Key Design Decisions
 
 ##### Asynchronous Processing
 
@@ -339,9 +349,7 @@ onProgressUpdate?(processedItems, progress)
 - Original synchronous functions kept for compatibility
 - Callback pattern separates concerns between XMLGenerator and UI
 
-## 4. Performance Optimization for Large Directories
-
-### What Was Changed
+## 5. Performance Optimization for Large Directories
 
 Added conditional syntax highlighting and warning dialog for directories with more than 10,000 items to prevent application freezing.
 
@@ -352,7 +360,7 @@ Added conditional syntax highlighting and warning dialog for directories with mo
 - **State Variables Added**: `directoryItemCount`, `directorySize`, `useSyntaxHighlighting`
 - **Localization**: Added warning dialog strings to English and Spanish
 
-#### Components Added
+### Components Added
 
 **1. Directory Size Calculation**
 
@@ -406,26 +414,46 @@ private func generateXML() {
 In ContentView.swift:
 
 ```swift
-private func showWarningAlertWithIcon() {
-    let alert = NSAlert()
-    alert.messageText = NSLocalizedString("Warning:", comment: "")
-    alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
-    alert.alertStyle = .warning
-    
-    // Set SF Symbol as icon
-    if let warningImage = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Warning") {
-        alert.icon = warningImage
-    }
-    
-    alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
-    alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
-    
-    let response = alert.runModal()
-    if response == .alertFirstButtonReturn {
-        performGenerateXML()
-    }
-}
-```
+    private func showWarningAlertWithIcon() {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Warning:", comment: "")
+        alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
+            // alertStyle = .warning has issues rendering Continue button on macOS 15+
+		alert.alertStyle = .informational
+
+			// Note: Removed SF Symbol icon as it was causing the Continue button to not render properly
+			// The .warning alertStyle already provides a suitable warning icon
+		if let warningImage = NSImage(systemSymbolName:  "exclamationmark.triangle", accessibilityDescription: "Warning") {
+			alert.icon = warningImage
+		}
+
+        let continueButton = alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
+        let cancelButton = alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
+        
+			// Style the buttons to make them visible and distinguishable
+        continueButton.keyEquivalent = "\r"  // Return key - makes it the default button with blue accent
+        cancelButton.keyEquivalent = "\u{1b}"  // Escape key - standard cancel button
+
+		if #available(macOS 15.0, *) {
+				// Fix for macOS 15+ (Sequoia/Tahoe): Force button rendering before showing modal
+				// In macOS 15+, NSAlert buttons may not render immediately after being added
+				// This workaround forces the layout and display update to ensure buttons are visible
+			continueButton.needsDisplay = true
+			cancelButton.needsDisplay = true
+				// Force the alert window to complete its layout and display pass before showing the modal
+				// This ensures all UI elements, including buttons, are properly rendered
+				// NSAlert.window is always available as alerts create their window on initialization
+			alert.window.contentView?.layoutSubtreeIfNeeded()
+			alert.window.displayIfNeeded()
+		}
+
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+				// Continue button clicked
+            performGenerateXML()
+        }
+        // If cancel or closed, do nothing
+    }```
 
 **5. Conditional Syntax Highlighting**
 
@@ -445,7 +473,7 @@ if useSyntaxHighlighting {
 }
 ```
 
-#### Key Design Decisions
+### Key Design Decisions
 
 ##### Performance Threshold
 
@@ -468,20 +496,3 @@ if useSyntaxHighlighting {
 ##### Performance
 
 - Counting pass is faster (no XML generation)
-
-## Conclusion
-
-All features have been successfully implemented with a well-organized, modular architecture:
-
-- ✅ File metadata adds valuable information to XML output with formatted file sizes
-- ✅ Syntax highlighting improves readability and user experience
-- ✅ Progress indicator provides feedback for large directory processing
-- ✅ Performance optimization prevents app freezing with large directories
-- ✅ Code refactored into separate, focused modules (XMLGenerator, XMLSyntaxHighlighter)
-- ✅ Changes are surgical and maintain backward compatibility
-- ✅ No existing functionality was broken
-- ✅ Documentation comprehensively updated
-- ✅ Code follows Swift and SwiftUI best practices
-- ✅ Proper use of async/await and MainActor for thread safety
-- ✅ Separation of concerns with clean architecture
-- ✅ Conditional features based on directory size for optimal performance
