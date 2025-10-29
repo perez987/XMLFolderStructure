@@ -36,32 +36,32 @@ class XMLGenerator {
     /// Calculates the total size of a directory recursively
     /// - Parameter url: The directory URL to calculate size for
     /// - Returns: The total size in bytes
-    func calculateDirectorySize(at url: URL) -> Int64 {
-        var totalSize: Int64 = 0
-        let fileManager = FileManager.default
-        
-        guard let enumerator = fileManager.enumerator(
-            at: url,
-            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return 0
-        }
-        
-        for case let fileURL as URL in enumerator {
-            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey]),
-                  let isDirectory = resourceValues.isDirectory else {
-                continue
-            }
-            
-            // Only count file sizes, not directories
-            if !isDirectory, let fileSize = resourceValues.fileSize {
-                totalSize += Int64(fileSize)
-            }
-        }
-        
-        return totalSize
-    }
+//    func calculateDirectorySize(at url: URL) -> Int64 {
+//        var totalSize: Int64 = 0
+//        let fileManager = FileManager.default
+//        
+//        guard let enumerator = fileManager.enumerator(
+//            at: url,
+//            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
+//            options: [.skipsHiddenFiles]
+//        ) else {
+//            return 0
+//        }
+//        
+//        for case let fileURL as URL in enumerator {
+//            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey]),
+//                  let isDirectory = resourceValues.isDirectory else {
+//                continue
+//            }
+//            
+//            // Only count file sizes, not directories
+//            if !isDirectory, let fileSize = resourceValues.fileSize {
+//                totalSize += Int64(fileSize)
+//            }
+//        }
+//        
+//        return totalSize
+//    }
     
     /// Generates XML structure for a directory synchronously
     /// - Parameter url: The directory URL to generate XML for

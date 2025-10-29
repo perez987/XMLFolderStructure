@@ -166,7 +166,7 @@ struct ContentView: View {
         
         // Count items and calculate size in the directory
         directoryItemCount = xmlGenerator.countItems(at: directory)
-        directorySize = xmlGenerator.calculateDirectorySize(at: directory)
+//        directorySize = xmlGenerator.calculateDirectorySize(at: directory)
         
         // Determine if we should use syntax highlighting
         useSyntaxHighlighting = directoryItemCount <= 10000
