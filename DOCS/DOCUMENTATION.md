@@ -67,7 +67,6 @@ The main view containing all UI and business logic, including the SyntaxHighligh
 - `totalItems`: Total count of items (files and folders) to process
 - `processedItems`: Count of items processed so far
 - `directoryItemCount`: Count of items in selected directory (for performance decisions)
-- `directorySize`: Total size of selected directory in bytes
 - `useSyntaxHighlighting`: Boolean flag to enable/disable syntax highlighting based on directory size
 
 #### Key Functions
@@ -82,13 +81,6 @@ The following methods are in the `XMLGenerator` class (XMLGenerator.swift):
 - Uses FileManager's enumerator for efficient traversal
 - Returns the total count for progress tracking
 - Skips hidden files (files starting with ".")
-
-###### calculateDirectorySize(at:)
-
-- Calculates the total size of all files in a directory recursively
-- Uses FileManager's enumerator for efficient traversal
-- Returns total size in bytes
-- Skips hidden files and only counts file sizes (not directories)
 
 ###### buildXML(for:)
 
@@ -165,7 +157,6 @@ The following methods are in the `ContentView` struct (ContentView.swift):
 - Guards against nil directory
 - Counts total items and calculates directory size using XMLGenerator
 - Determines if syntax highlighting should be used (based on 10,000 item threshold)
-- Shows warning dialog if directory has more than 10,000 items
 - Calls performGenerateXML() to proceed with generation
 
 ###### performGenerateXML()
@@ -178,15 +169,6 @@ The following methods are in the `ContentView` struct (ContentView.swift):
 - Conditionally applies syntax highlighting based on useSyntaxHighlighting flag
 - Handles errors and displays error messages
 - Disables the Generate button during processing
-
-###### showWarningAlertWithIcon()
-
-- Creates and displays a warning dialog for large directories
-- Shows directory item count
-- Explains performance implications
-- Provides Continue/Cancel options
-- Uses standard system warning icon (not SF Symbol)
-- Includes rendering fixes for macOS 15+ (Sequoia/Tahoe) to ensure buttons are visible immediately
 
 ##### XMLSyntaxHighlighter Methods
 
@@ -229,14 +211,6 @@ XML syntax highlighting feature uses regex operations that can become extremely 
 
 - Directories ≤ 10000 items: Full color syntax highlighting
 - Directories > 10000 items: Plain text display
-
-For directories with > 10000 items:
-
-- Warning dialog appears with updated message explaining:
-	- Potential app freezing with large directories
-	- XML will be displayed without syntax highlighting
-- User can choose to Continue or Cancel
-- If continuing, XML generates and displays as readable plain text
 
 ##### ContentView.swift
 

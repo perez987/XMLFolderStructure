@@ -18,7 +18,6 @@ Modified the XML generation logic to include file size and modification date as 
 
 - **File**: `XMLFolderStructure/XMLGenerator.swift`
 - **Functions Modified**: `processDirectory(at:indentLevel:)`, `processDirectoryAsync(at:indentLevel:)`
-- **Lines Changed**: ~10 lines per function
 
 **Before:**
 
@@ -357,25 +356,12 @@ Added conditional syntax highlighting and warning dialog for directories with mo
 
 - **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLGenerator.swift`
 - **New Functions**: `calculateDirectorySize(at:)` in XMLGenerator, `showWarningAlertWithIcon()` in ContentView
-- **State Variables Added**: `directoryItemCount`, `directorySize`, `useSyntaxHighlighting`
+- **State Variables Added**: `directoryItemCount`, `useSyntaxHighlighting`
 - **Localization**: Added warning dialog strings to English and Spanish
 
 ### Components Added
 
-**1. Directory Size Calculation**
-
-In XMLGenerator.swift:
-
-```swift
-func calculateDirectorySize(at url: URL) -> Int64 {
-    // Calculates total size of all files in directory
-    // Uses FileManager.enumerator for efficient traversal
-    // Returns total size in bytes
-    // Skips hidden files
-}
-```
-
-**2. State Variables for Performance Management**
+**1. State Variables for Performance Management**
 
 In ContentView.swift:
 
@@ -385,7 +371,7 @@ In ContentView.swift:
 @State private var useSyntaxHighlighting: Bool = true
 ```
 
-**3. Pre-Generation Analysis**
+**2. Pre-Generation Analysis**
 
 In ContentView.swift:
 
@@ -395,67 +381,16 @@ private func generateXML() {
     
     // Count items and calculate size
     directoryItemCount = xmlGenerator.countItems(at: directory)
-    directorySize = xmlGenerator.calculateDirectorySize(at: directory)
     
     // Determine if syntax highlighting should be used
     useSyntaxHighlighting = directoryItemCount <= 10000
     
-    // Show warning if directory has more than 10,000 items
-    if directoryItemCount > 10000 {
-        showWarningAlertWithIcon()
-    } else {
-        performGenerateXML()
-    }
+     // Generate XML output
+     performGenerateXML()
 }
 ```
 
-**4. Warning Dialog**
-
-In ContentView.swift:
-
-```swift
-    private func showWarningAlertWithIcon() {
-        let alert = NSAlert()
-        alert.messageText = NSLocalizedString("Warning:", comment: "")
-        alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
-            // alertStyle = .warning has issues rendering Continue button on macOS 15+
-		alert.alertStyle = .informational
-
-			// Note: Removed SF Symbol icon as it was causing the Continue button to not render properly
-			// The .warning alertStyle already provides a suitable warning icon
-		if let warningImage = NSImage(systemSymbolName:  "exclamationmark.triangle", accessibilityDescription: "Warning") {
-			alert.icon = warningImage
-		}
-
-        let continueButton = alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
-        let cancelButton = alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
-        
-			// Style the buttons to make them visible and distinguishable
-        continueButton.keyEquivalent = "\r"  // Return key - makes it the default button with blue accent
-        cancelButton.keyEquivalent = "\u{1b}"  // Escape key - standard cancel button
-
-		if #available(macOS 15.0, *) {
-				// Fix for macOS 15+ (Sequoia/Tahoe): Force button rendering before showing modal
-				// In macOS 15+, NSAlert buttons may not render immediately after being added
-				// This workaround forces the layout and display update to ensure buttons are visible
-			continueButton.needsDisplay = true
-			cancelButton.needsDisplay = true
-				// Force the alert window to complete its layout and display pass before showing the modal
-				// This ensures all UI elements, including buttons, are properly rendered
-				// NSAlert.window is always available as alerts create their window on initialization
-			alert.window.contentView?.layoutSubtreeIfNeeded()
-			alert.window.displayIfNeeded()
-		}
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-				// Continue button clicked
-            performGenerateXML()
-        }
-        // If cancel or closed, do nothing
-    }```
-
-**5. Conditional Syntax Highlighting**
+**3. Conditional Syntax Highlighting**
 
 In ContentView.swift (within performGenerateXML):
 
@@ -479,7 +414,6 @@ if useSyntaxHighlighting {
 
 - **10,000 items**: Chosen as the threshold based on testing
 - Syntax highlighting with regex operations becomes slow beyond this threshold
-- Warning allows user to make informed decision
 
 ##### User Experience
 

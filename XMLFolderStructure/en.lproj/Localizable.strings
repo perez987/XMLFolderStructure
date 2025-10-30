@@ -2,9 +2,11 @@
 "No directory selected:" = "No directory selected";
 "Browse:" = "Browse";
 "Generate XML:" = "Generate XML";
+"Performance Warning" = "⚠️ Performance Warning";
+"GenerateXML Alert" = "The app works fine with directories up to 10,000 items but can freeze with larger directories.\n\nXML text will not be highlighted when directory has more than 10,000 items.";
+"Understood" = "Understood";
 "XML Output:" = "XML Output";
 "Export to File:" = "Export to File";
 "Copy to Clipboard:" = "Copy to Clipboard";
 "Processing:" = "Processing:";
 "items" = "items";
-"Warning:" = "Warning";"Cancel:" = "Cancel";"Continue:" = "Continue";"WarningMessage:" = "The selected directory contains %d items.\n\nThe app works fine with directories up to 10,000 items but can freeze with directories of more items.\n\nXML text will not be highlighted when directory has more than 10,000 items.\n\nDo you want to continue?";

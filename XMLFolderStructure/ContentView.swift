@@ -13,9 +13,10 @@ struct ContentView: View {
     @State private var totalItems: Int = 0
     @State private var processedItems: Int = 0
     @State private var directoryItemCount: Int = 0
-    @State private var directorySize: Int64 = 0
     @State private var useSyntaxHighlighting: Bool = true
-    
+
+	@State private var showAlert = false
+
     private let xmlGenerator = XMLGenerator()
     
     var body: some View {
@@ -27,6 +28,11 @@ struct ContentView: View {
                     
                     TextField(NSLocalizedString("No directory selected:", comment: ""), text: .constant(selectedDirectory?.path ?? NSLocalizedString("No directory selected:", comment: "")))
                         .disabled(true)
+//						.border(Color.secondary, width: 1)
+						.overlay(
+							RoundedRectangle(cornerRadius: 18)
+								.stroke(Color.secondary, lineWidth: 0.4)
+						)
 
                     Button(NSLocalizedString("Browse:", comment: "")) {
                         selectDirectory()
@@ -35,11 +41,29 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
                 
-                Button(NSLocalizedString("Generate XML:", comment: "")) {
-                    generateXML()
+                HStack(spacing: 8) {
+                    Button(NSLocalizedString("Generate XML:", comment: "")) {
+                        generateXML()
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(selectedDirectory == nil || isGenerating)
+
+					Button {
+						showAlert = true
+					} label: {
+						Image(systemName: "info.circle")
+							.font(.system(size: 18))
+							.foregroundColor(.secondary)
+					}
+					.buttonStyle(.borderless)
+					.alert("Performance Warning", isPresented: $showAlert) {
+						Button("Understood") {
+						}
+					} message: {
+						Text("GenerateXML Alert")
+					}
+
                 }
-                .buttonStyle(.bordered)
-                .disabled(selectedDirectory == nil || isGenerating)
                 
                 // Progress indicator
                 if isGenerating {
@@ -65,7 +89,8 @@ struct ContentView: View {
 
                     SyntaxHighlightedTextView(attributedString: $highlightedXML)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
+						.border(Color.secondary, width: 0.4)
+
                 // Export and clipboard buttons
                 HStack(spacing: 10) {
                     Spacer()
@@ -85,8 +110,8 @@ struct ContentView: View {
             }
             .padding(26)
         }
-        .frame(minWidth: 700, minHeight: 600)
-        
+        .frame(minWidth: 700, minHeight: 790)
+
         .alert("Error", isPresented: $showError) {
             Button("OK") {
                 showError = false
@@ -94,49 +119,6 @@ struct ContentView: View {
         } message: {
             Text(errorMessage)
         }
-    }
-    
-    // MARK: - Alert Helper
-    
-    private func showWarningAlertWithIcon() {
-        let alert = NSAlert()
-        alert.messageText = NSLocalizedString("Warning:", comment: "")
-        alert.informativeText = String(format: NSLocalizedString("WarningMessage:", comment: ""), directoryItemCount)
-            // alertStyle = .warning has issues rendering Continue button on macOS 15+
-		alert.alertStyle = .informational
-
-			// Note: Removed SF Symbol icon as it was causing the Continue button to not render properly
-			// The .warning alertStyle already provides a suitable warning icon
-		if let warningImage = NSImage(systemSymbolName:  "exclamationmark.triangle", accessibilityDescription: "Warning") {
-			alert.icon = warningImage
-		}
-
-        let continueButton = alert.addButton(withTitle: NSLocalizedString("Continue:", comment: ""))
-        let cancelButton = alert.addButton(withTitle: NSLocalizedString("Cancel:", comment: ""))
-        
-			// Style the buttons to make them visible and distinguishable
-        continueButton.keyEquivalent = "\r"  // Return key - makes it the default button with blue accent
-        cancelButton.keyEquivalent = "\u{1b}"  // Escape key - standard cancel button
-
-		if #available(macOS 15.0, *) {
-				// Fix for macOS 15+ (Sequoia/Tahoe): Force button rendering before showing modal
-				// In macOS 15+, NSAlert buttons may not render immediately after being added
-				// This workaround forces the layout and display update to ensure buttons are visible
-			continueButton.needsDisplay = true
-			cancelButton.needsDisplay = true
-				// Force the alert window to complete its layout and display pass before showing the modal
-				// This ensures all UI elements, including buttons, are properly rendered
-				// NSAlert.window is always available as alerts create their window on initialization
-			alert.window.contentView?.layoutSubtreeIfNeeded()
-			alert.window.displayIfNeeded()
-		}
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-				// Continue button clicked
-            performGenerateXML()
-        }
-        // If cancel or closed, do nothing
     }
     
     // MARK: - Directory Selection
@@ -164,23 +146,14 @@ struct ContentView: View {
             return
         }
         
-        // Count items and calculate size in the directory
+        // Count items in the directory
         directoryItemCount = xmlGenerator.countItems(at: directory)
-//        directorySize = xmlGenerator.calculateDirectorySize(at: directory)
-        
+
         // Determine if we should use syntax highlighting
         useSyntaxHighlighting = directoryItemCount <= 10000
-        
-        // Only show warning if directory has more than 10000 items OR more than 1GB
-//        let oneGigabyte: Int64 = 1_073_741_824 // 1GB in bytes
-//        if directoryItemCount > 10000 || directorySize > oneGigabyte {
-        // Only show warning if directory has more than 12000 items
-        if directoryItemCount > 10000 {
-            showWarningAlertWithIcon()
-        } else {
-            // Directly generate XML if conditions are not met
+
+				// Generate XML output
             performGenerateXML()
-        }
     }
     
     private func performGenerateXML() {
@@ -274,6 +247,9 @@ struct ContentView: View {
 // MARK: - Custom Syntax Highlighted Text View
 
 struct SyntaxHighlightedTextView: NSViewRepresentable {
+		// Wraps NSTextView for displaying attributed text in SwiftUI
+		// Configures text view as non-editable but selectable
+		// Updates display when attributedString binding changes
     @Binding var attributedString: NSAttributedString
     
     func makeNSView(context: Context) -> NSScrollView {
