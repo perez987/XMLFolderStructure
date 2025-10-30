@@ -26,14 +26,6 @@ XML syntax highlighting feature uses regex operations that can become extremely 
 - Directories ≤ 10000 items: Full color syntax highlighting
 - Directories > 10000 items: Plain text display
 
-For directories with > 10000 items:
-
-- Warning dialog appears with updated message explaining:
-	- Potential app freezing with large directories
-	- XML will be displayed without syntax highlighting
-- User can choose to Continue or Cancel
-- If continuing, XML generates and displays as readable plain text
-
 ## XML Output Format
 
 ```xml
