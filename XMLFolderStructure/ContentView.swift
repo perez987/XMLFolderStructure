@@ -110,7 +110,7 @@ struct ContentView: View {
             }
             .padding(26)
         }
-        .frame(minWidth: 700, minHeight: 790)
+        .frame(minWidth: 680, minHeight: 680)
 
         .alert("Error", isPresented: $showError) {
             Button("OK") {
