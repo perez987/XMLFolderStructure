@@ -1,5 +1,10 @@
-xcuserdata/
-.build/
 .DS_Store
-XMLFolderStructure/.DS_Store
-XMLFolderStructure.xcodeproj/project.xcworkspace/xcuserdata/yo.xcuserdatad/UserInterfaceState.xcuserstate
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+Temporary Items
+Thumbs.db
