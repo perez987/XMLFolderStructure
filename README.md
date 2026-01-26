@@ -18,6 +18,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 - **Export to File**: Save the generated XML to a file with a user-chosen name and location
 - **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
 - **Error Handling**: Displays user-friendly error messages for any issues
+- **Localization support**: Supports localization system with a language selector view and 5 languages (German, English, French, Italian and Spanish)
 
 ### Note about Syntax Highlighting
 
@@ -76,6 +77,9 @@ XML syntax highlighting feature uses regex operations that can become extremely 
    - **Gray**: XML brackets and slashes
 5. Use the **Export to File** button to save the XML to a file (choose location and filename)
 6. Use the **Copy to Clipboard** button to copy the XML text to your clipboard
+7. `Language` > `Select language` in menubar or `⌘ + L `keyboard shortcut to open the language selector
+
+![](Images/Languages.png)
 
 ## Appicon
 
