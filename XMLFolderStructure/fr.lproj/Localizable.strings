@@ -1,0 +1,25 @@
+"Selected directory:" = "Répertoire :";
+"No directory selected:" = "Aucun répertoire sélectionné";
+"Browse:" = "Parcourir";
+"Generate XML:" = "Générer XML";
+"Performance Warning" = "Avertissement de performance";
+"GenerateXML Alert" = "L'application fonctionne bien avec des répertoires jusqu'à 10 000 éléments, mais peut se bloquer avec des répertoires plus grands.\n\nLe texte XML ne sera pas mis en évidence lorsque le répertoire contient plus de 10 000 éléments.";
+"Understood" = "Compris";
+"XML Output:" = "Sortie XML";
+"Export to File:" = "Exporter vers un fichier";
+"Copy to Clipboard:" = "Copier dans le presse-papiers";
+"Processing:" = "Traitement :";
+"items" = "éléments";
+"Warning:" = "Avertissement";
+"Cancel:" = "Annuler";
+"Continue:" = "Continuer";
+
+/* Language Menu */
+"menu_language" = "Langue";
+"menu_select_language" = "Sélectionner la langue...";
+"language_selector_title" = "Sélectionner la langue";
+"accept" = "Accepter";
+"cancel" = "Annuler";
+"ok" = "OK";
+"language_changed_title" = "Langue modifiée";
+"language_changed_message" = "Veuillez redémarrer l'application\npour appliquer la nouvelle langue.";

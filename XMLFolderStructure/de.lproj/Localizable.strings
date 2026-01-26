@@ -1,0 +1,25 @@
+"Selected directory:" = "Verzeichnis:";
+"No directory selected:" = "Kein Verzeichnis ausgewählt";
+"Browse:" = "Durchsuchen";
+"Generate XML:" = "XML generieren";
+"Performance Warning" = "Leistungswarnung";
+"GenerateXML Alert" = "Die App funktioniert gut mit Verzeichnissen bis zu 10.000 Elementen, kann aber bei größeren Verzeichnissen einfrieren.\n\nXML-Text wird nicht hervorgehoben, wenn das Verzeichnis mehr als 10.000 Elemente enthält.";
+"Understood" = "Verstanden";
+"XML Output:" = "XML-Ausgabe";
+"Export to File:" = "In Datei exportieren";
+"Copy to Clipboard:" = "In die Zwischenablage kopieren";
+"Processing:" = "Verarbeitung:";
+"items" = "Elemente";
+"Warning:" = "Warnung";
+"Cancel:" = "Abbrechen";
+"Continue:" = "Fortfahren";
+
+/* Language Menu */
+"menu_language" = "Sprache";
+"menu_select_language" = "Sprache auswählen...";
+"language_selector_title" = "Sprache auswählen";
+"accept" = "Akzeptieren";
+"cancel" = "Abbrechen";
+"ok" = "OK";
+"language_changed_title" = "Sprache geändert";
+"language_changed_message" = "Bitte starten Sie die Anwendung neu,\num die neue Sprache anzuwenden.";

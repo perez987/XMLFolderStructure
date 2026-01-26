@@ -14,6 +14,7 @@
 		C010A1BB2EA9F96C00BB64CD /* XMLSyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C010A1BA2EA9F96C00BB64CD /* XMLSyntaxHighlighter.swift */; };
 		C01C03642E9F95ED00DF7A5C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C01C03622E9F95ED00DF7A5C /* Localizable.strings */; };
 		C05887FD2EA5417A0088761B /* XMLGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05887FC2EA5417A0088761B /* XMLGenerator.swift */; };
+		D9FFD7C72F277EBB0029B118 /* LanguageSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FFD7C62F277EBB0029B118 /* LanguageSelectorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,10 @@
 		C01C03632E9F95ED00DF7A5C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C01C03652E9F978300DF7A5C /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C05887FC2EA5417A0088761B /* XMLGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLGenerator.swift; sourceTree = "<group>"; };
+		D9A521EA2F2780DD007F83F8 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D9A521EB2F2780E2007F83F8 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D9A521EC2F2780E8007F83F8 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D9FFD7C62F277EBB0029B118 /* LanguageSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000004000000000000001 /* ContentView.swift */,
+				D9FFD7C62F277EBB0029B118 /* LanguageSelectorView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -138,6 +144,9 @@
 				en,
 				Base,
 				es,
+				de,
+				fr,
+				it,
 			);
 			mainGroup = A100000C000000000000001;
 			productRefGroup = A100000E000000000000001 /* Products */;
@@ -169,6 +178,7 @@
 			files = (
 				C010A1BB2EA9F96C00BB64CD /* XMLSyntaxHighlighter.swift in Sources */,
 				C05887FD2EA5417A0088761B /* XMLGenerator.swift in Sources */,
+				D9FFD7C72F277EBB0029B118 /* LanguageSelectorView.swift in Sources */,
 				A1000003000000000000001 /* ContentView.swift in Sources */,
 				A1000001000000000000001 /* XMLFolderStructureApp.swift in Sources */,
 			);
@@ -182,6 +192,9 @@
 			children = (
 				C01C03632E9F95ED00DF7A5C /* en */,
 				C01C03652E9F978300DF7A5C /* es */,
+				D9A521EA2F2780DD007F83F8 /* de */,
+				D9A521EB2F2780E2007F83F8 /* fr */,
+				D9A521EC2F2780E8007F83F8 /* it */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -324,7 +337,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"XMLFolderStructure/Preview Content\"";
 				ENABLE_APP_SANDBOX = YES;
@@ -348,7 +361,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.8;
 				PRODUCT_BUNDLE_IDENTIFIER = perez987.XMLFolderStructure;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -365,7 +378,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"XMLFolderStructure/Preview Content\"";
 				ENABLE_APP_SANDBOX = YES;
@@ -389,7 +402,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.8;
 				PRODUCT_BUNDLE_IDENTIFIER = perez987.XMLFolderStructure;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

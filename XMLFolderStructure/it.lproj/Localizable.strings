@@ -1,0 +1,25 @@
+ "Selected directory:" = "Cartella selezionata:";
+"No directory selected:" = "Nessuna directory selezionata";
+"Browse:" = "Sfoglia";
+"Generate XML:" = "Genera XML";
+"Performance Warning" = "Avviso di prestazioni";
+"GenerateXML Alert" = "L'app funziona bene con directory fino a 10.000 elementi, ma può bloccarsi con directory più grandi.\n\nIl testo XML non verrà evidenziato quando la directory contiene più di 10.000 elementi.";
+"Understood" = "Capito";
+"XML Output:" = "Output XML";
+"Export to File:" = "Esporta in file";
+"Copy to Clipboard:" = "Copia negli appunti";
+"Processing:" = "Elaborazione:";
+"items" = "elementi";
+"Warning:" = "Avviso";
+"Cancel:" = "Annulla";
+"Continue:" = "Continua";
+
+/* Language Menu */
+"menu_language" = "Lingua";
+"menu_select_language" = "Seleziona lingua";
+"language_selector_title" = "Seleziona lingua";
+"accept" = "Accetta";
+"cancel" = "Annulla";
+"ok" = "OK";
+"language_changed_title" = "Lingua modificata";
+"language_changed_message" = "Riavvia l'applicazione\nper applicare la nuova lingua.";
