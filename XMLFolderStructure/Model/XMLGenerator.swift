@@ -4,9 +4,8 @@ import Foundation
 class XMLGenerator {
     
     // Progress tracking callback
-    var onProgressUpdate: ((Int, Double) -> Void)?
+    var onProgressUpdate: ((Int) -> Void)?
     
-    private var totalItems: Int = 0
     private var processedItems: Int = 0
     
     // MARK: - Public Methods
@@ -90,7 +89,6 @@ class XMLGenerator {
     func buildXMLAsync(for url: URL) async throws -> String {
         // Reset progress tracking
         processedItems = 0
-        totalItems = countItems(at: url)
         
         var xml = ""
         let directoryName = xmlEscape(url.lastPathComponent)
@@ -262,8 +260,7 @@ class XMLGenerator {
                 
                 // Update progress
                 processedItems += 1
-                let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
-                onProgressUpdate?(processedItems, progress)
+                onProgressUpdate?(processedItems)
             }
         } catch {
             throw NSError(

@@ -200,16 +200,14 @@ private func performGenerateXML() {
 
 ## 4. Progress Indicator Feature
 
-Added a progress indicator that displays during XML generation for large directories, showing both a progress bar and item count.
+Added a progress indicator that displays during XML generation for large directories, showing a spinner between the processed and total item counts.
 
 ### Implementation Details
 
 - **Files**: `XMLFolderStructure/ContentView.swift`, `XMLFolderStructure/XMLGenerator.swift`
 - **New Functions in XMLGenerator**: `countItems(at:)`, `buildXMLAsync(for:)`, `processDirectoryAsync(at:indentLevel:)`
 - **Functions Modified in ContentView**: `generateXML()`, `performGenerateXML()`
-- **Localization**: Added "Processing:" and "items" strings to English and Spanish
-
-#### Components Added
+- #### Components Added
 
 **1. State Variables for Progress Tracking**
 
@@ -217,7 +215,6 @@ In ContentView.swift:
 
 ```swift
 @State private var isGenerating: Bool = false
-@State private var progressValue: Double = 0.0
 @State private var totalItems: Int = 0
 @State private var processedItems: Int = 0
 ```
@@ -226,9 +223,8 @@ In XMLGenerator.swift:
 
 ```swift
 // Progress tracking callback
-var onProgressUpdate: ((Int, Double) -> Void)?
+var onProgressUpdate: ((Int) -> Void)?
 
-private var totalItems: Int = 0
 private var processedItems: Int = 0
 ```
 
@@ -236,14 +232,16 @@ private var processedItems: Int = 0
 
 ```swift
 if isGenerating {
-    VStack(spacing: 5) {
-        ProgressView(value: progressValue, total: 1.0)
-            .progressViewStyle(.linear)
-            .frame(maxWidth: 400)
-        Text("Processing: \(processedItems) / \(totalItems) items")
-            .font(.caption)
-            .foregroundColor(.secondary)
+    HStack(spacing: 12) {
+        Text("\(processedItems)")
+        Spacer()
+        ProgressView()
+        Spacer()
+        Text("\(totalItems)")
     }
+    .frame(maxWidth: 400)
+    .font(.caption)
+    .foregroundColor(.secondary)
 }
 ```
 
@@ -269,26 +267,20 @@ private func performGenerateXML() {
     
     // Reset progress state
     isGenerating = true
-    progressValue = 0.0
+    totalItems = directoryItemCount
     processedItems = 0
     xmlOutput = ""
     highlightedXML = NSAttributedString()
     
     // Set up progress callback
-    xmlGenerator.onProgressUpdate = { processed, progress in
+    xmlGenerator.onProgressUpdate = { processed in
         Task { @MainActor in
             self.processedItems = processed
-            self.progressValue = progress
         }
     }
     
     // Run asynchronously in Task
     Task {
-        // Count total items first
-        await MainActor.run {
-            totalItems = directoryItemCount
-        }
-        
         // Generate XML with progress updates
         let xml = try await xmlGenerator.buildXMLAsync(for: directory)
         
@@ -310,14 +302,13 @@ private func performGenerateXML() {
 
 In XMLGenerator.swift:
 
-- `buildXMLAsync(for:)`: Async version of buildXML, manages total item counting
+- `buildXMLAsync(for:)`: Async version of buildXML
 - `processDirectoryAsync(at:indentLevel:)`: Async version with progress updates via callback
 
 ```swift
 // Update progress after each item in processDirectoryAsync
 processedItems += 1
-let progress = totalItems > 0 ? Double(processedItems) / Double(totalItems) : 0.0
-onProgressUpdate?(processedItems, progress)
+onProgressUpdate?(processedItems)
 ```
 
 ### Key Design Decisions
@@ -328,16 +319,15 @@ onProgressUpdate?(processedItems, progress)
 - Wraps in Task for proper async context
 - Updates UI on MainActor to ensure thread safety
 
-##### Progress Calculation
+##### Progress Tracking
 
 - Pre-counts all items before processing for accurate progress
 - Updates after each file/folder processed
-- Calculates percentage: `processedItems / totalItems`
 
 ##### UI Updates
 
-- Progress bar uses linear style for simplicity
-- Shows both visual (progress bar) and numeric (X / Y items) feedback
+- Uses an indeterminate spinner during processing
+- Shows the processed count on the left and the total count on the right
 - Disables Generate button during processing
 - Hides progress UI when not generating
 

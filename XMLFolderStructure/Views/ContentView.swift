@@ -9,7 +9,6 @@ struct ContentView: View {
     @State private var showError: Bool = false
     @State private var highlightedXML: NSAttributedString = NSAttributedString()
     @State private var isGenerating: Bool = false
-    @State private var progressValue: Double = 0.0
     @State private var totalItems: Int = 0
     @State private var processedItems: Int = 0
     @State private var directoryItemCount: Int = 0
@@ -67,14 +66,19 @@ struct ContentView: View {
                 
                 // Progress indicator
                 if isGenerating {
-                    VStack(spacing: 5) {
-                        ProgressView(value: progressValue, total: 1.0)
-                            .progressViewStyle(.linear)
-                            .frame(maxWidth: 400)
-                        Text("\(NSLocalizedString("Processing:", comment: "")) \(processedItems) / \(totalItems) \(NSLocalizedString("items", comment: ""))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    HStack(spacing: 12) {
+                        Text("\(processedItems)")
+                            .monospacedDigit()
+                        Spacer()
+                        ProgressView()
+                            .controlSize(.regular)
+                        Spacer()
+                        Text("\(totalItems)")
+                            .monospacedDigit()
                     }
+                    .frame(maxWidth: 400)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                     .padding(.horizontal)
                 }
             }
@@ -164,27 +168,21 @@ struct ContentView: View {
         
         // Reset progress state
         isGenerating = true
-        progressValue = 0.0
+        totalItems = directoryItemCount
         processedItems = 0
         xmlOutput = ""
         highlightedXML = NSAttributedString()
         
         // Set up progress callback	
-		xmlGenerator.onProgressUpdate = { processed, progress in
+		xmlGenerator.onProgressUpdate = { processed in
 		    Task { @MainActor in
 		        self.processedItems = processed
-		        self.progressValue = progress
 		    }
 		}
         
         // Run XML generation asynchronously
         Task {
             do {
-                // Count total items first
-                await MainActor.run {
-                    totalItems = directoryItemCount
-                }
-                
                 // Generate XML with progress tracking
                 let xml = try await xmlGenerator.buildXMLAsync(for: directory)
                 

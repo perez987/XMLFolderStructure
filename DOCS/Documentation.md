@@ -50,8 +50,8 @@ The main view containing all UI and business logic, including the SyntaxHighligh
      - Blue: Attribute values (in quotes)
      - Gray: XML brackets and slashes
    - ScrollView: Allows scrolling through long XML output
-   - ProgressView: Linear progress bar displayed during XML generation (only visible when generating)
-   - Progress Text: Shows "Processing: X / Y items" below the progress bar
+   - ProgressView: Indeterminate spinning indicator displayed during XML generation (only visible when generating)
+   - Progress Counters: Show the processed item count to the left of the spinner and the total item count to the right
    - Export to File Button: Opens save dialog to export XML to a file (disabled when no XML)
    - Copy to Clipboard Button: Copies XML to system clipboard (disabled when no XML)
 
@@ -63,7 +63,6 @@ The main view containing all UI and business logic, including the SyntaxHighligh
 - `errorMessage`: Holds error messages for display
 - `showError`: Controls error alert visibility
 - `isGenerating`: Indicates whether XML generation is in progress
-- `progressValue`: Stores the progress percentage (0.0 to 1.0) for the progress bar
 - `totalItems`: Total count of items (files and folders) to process
 - `processedItems`: Count of items processed so far
 - `directoryItemCount`: Count of items in selected directory (for performance decisions)
