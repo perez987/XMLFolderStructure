@@ -13,7 +13,7 @@ This macOS SwiftUI application retrieves the structure of a directory, including
 - **Progress Indicator**: Shows real-time progress when processing large directories with a spinning indicator between the processed and total item counts
 - **Recursive Traversal**: Includes all subdirectories and their files
 - **File Metadata**: Includes file size (in bytes, formatted with dot separators) and modification date for each file
-- **Syntax Highlighting**: XML output is displayed with color-coded syntax highlighting for better readability
+- **Syntax Highlighting**: XML output is displayed with color-coded syntax highlighting for better readability (for directories with >10.000 items)
 - **Proper Indentation**: XML output is properly indented for easy reading
 - **Export to File**: Save the generated XML to a file with a user-chosen name and location
 - **Copy to Clipboard**: Copy the XML output directly to your clipboard for easy pasting
@@ -70,7 +70,7 @@ XML syntax highlighting feature uses regex operations that can become extremely 
 1. Click the **Browse** button to select a folder
 2. The selected directory path will appear in the text field
 3. Click the **Generate XML** button to create the XML output
-4. The XML structure will appear in the text area below with color-coded syntax highlighting:
+4. The XML structure will appear in the text area below with color-coded syntax highlighting (for directories with >10.000 items):
    - **Green**: XML tag names (root, folder, file)
    - **Purple**: Attribute names (name, size, modified, text)
    - **Blue**: Attribute values (in quotes)
