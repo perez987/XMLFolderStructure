@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
@@ -7,31 +7,31 @@ struct ContentView: View {
     @State private var xmlOutput: String = ""
     @State private var errorMessage: String = ""
     @State private var showError: Bool = false
-    @State private var highlightedXML: NSAttributedString = NSAttributedString()
+    @State private var highlightedXML: NSAttributedString = .init()
     @State private var isGenerating: Bool = false
     @State private var totalItems: Int = 0
     @State private var processedItems: Int = 0
     @State private var directoryItemCount: Int = 0
     @State private var useSyntaxHighlighting: Bool = true
 
-	@State private var showAlert = false
+    @State private var showAlert = false
 
     private let xmlGenerator = XMLGenerator()
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Top section: Directory selection
             VStack(spacing: 10) {
                 HStack {
                     Text(NSLocalizedString("Selected directory:", comment: ""))
-                    
+
                     TextField(NSLocalizedString("No directory selected:", comment: ""), text: .constant(selectedDirectory?.path ?? NSLocalizedString("No directory selected:", comment: "")))
                         .disabled(true)
-//						.border(Color.secondary, width: 1)
-						.overlay(
-							RoundedRectangle(cornerRadius: 18)
-								.stroke(Color.secondary, lineWidth: 0.4)
-						)
+                        //						.border(Color.secondary, width: 1)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(Color.secondary, lineWidth: 0.4)
+                        )
 
                     Button(NSLocalizedString("Browse:", comment: "")) {
                         selectDirectory()
@@ -39,7 +39,7 @@ struct ContentView: View {
                     .buttonStyle(.bordered)
                 }
                 .padding(.horizontal)
-                
+
                 HStack(spacing: 8) {
                     Button(NSLocalizedString("Generate XML:", comment: "")) {
                         generateXML()
@@ -47,23 +47,21 @@ struct ContentView: View {
                     .buttonStyle(.bordered)
                     .disabled(selectedDirectory == nil || isGenerating)
 
-					Button {
-						showAlert = true
-					} label: {
-						Image(systemName: "info.circle")
-							.font(.system(size: 18))
-							.foregroundColor(.secondary)
-					}
-					.buttonStyle(.borderless)
-					.alert("Performance Warning", isPresented: $showAlert) {
-						Button("Understood") {
-						}
-					} message: {
-						Text("GenerateXML Alert")
-					}
-
+                    Button {
+                        showAlert = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .alert("Performance Warning", isPresented: $showAlert) {
+                        Button("Understood") {}
+                    } message: {
+                        Text("GenerateXML Alert")
+                    }
                 }
-                
+
                 // Progress indicator
                 if isGenerating {
                     HStack(spacing: 12) {
@@ -83,17 +81,17 @@ struct ContentView: View {
                 }
             }
             .padding(.top)
-            
+
             Divider()
-            
+
             // Bottom section: XML output area
             VStack(alignment: .leading, spacing: 10) {
                 Text(NSLocalizedString("XML Output:", comment: ""))
                     .font(.headline)
 
-                    SyntaxHighlightedTextView(attributedString: $highlightedXML)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-						.border(Color.secondary, width: 0.4)
+                SyntaxHighlightedTextView(attributedString: $highlightedXML)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .border(Color.secondary, width: 0.4)
 
                 // Export and clipboard buttons
                 HStack(spacing: 10) {
@@ -115,7 +113,6 @@ struct ContentView: View {
             .padding(26)
         }
         .frame(minWidth: 800, idealWidth: 800, maxWidth: 800, minHeight: 680, idealHeight: 680)
-
         .alert("Error", isPresented: $showError) {
             Button("OK") {
                 showError = false
@@ -124,16 +121,16 @@ struct ContentView: View {
             Text(errorMessage)
         }
     }
-    
+
     // MARK: - Directory Selection
-    
+
     private func selectDirectory() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        
+
         panel.begin { response in
             if response == .OK {
                 selectedDirectory = panel.url
@@ -141,51 +138,51 @@ struct ContentView: View {
             }
         }
     }
-    
+
     // MARK: - XML Generation
-    
+
     private func generateXML() {
         guard let directory = selectedDirectory else {
             showErrorMessage("No directory selected")
             return
         }
-        
+
         // Count items in the directory
         directoryItemCount = xmlGenerator.countItems(at: directory)
 
         // Determine if we should use syntax highlighting
         useSyntaxHighlighting = directoryItemCount <= 10000
 
-				// Generate XML output
-            performGenerateXML()
+        // Generate XML output
+        performGenerateXML()
     }
-    
+
     private func performGenerateXML() {
         guard let directory = selectedDirectory else {
             showErrorMessage("No directory selected")
             return
         }
-        
+
         // Reset progress state
         isGenerating = true
         totalItems = directoryItemCount
         processedItems = 0
         xmlOutput = ""
         highlightedXML = NSAttributedString()
-        
-        // Set up progress callback	
-		xmlGenerator.onProgressUpdate = { processed in
-		    Task { @MainActor in
-		        self.processedItems = processed
-		    }
-		}
-        
+
+        // Set up progress callback
+        xmlGenerator.onProgressUpdate = { processed in
+            Task { @MainActor in
+                self.processedItems = processed
+            }
+        }
+
         // Run XML generation asynchronously
         Task {
             do {
                 // Generate XML with progress tracking
                 let xml = try await xmlGenerator.buildXMLAsync(for: directory)
-                
+
                 // Update UI on main thread
                 await MainActor.run {
                     xmlOutput = xml
@@ -196,7 +193,7 @@ struct ContentView: View {
                         // Use plain text without syntax highlighting
                         let plainText = NSAttributedString(string: xml, attributes: [
                             .font: NSFont.systemFont(ofSize: 12),
-                            .foregroundColor: NSColor.textColor
+                            .foregroundColor: NSColor.textColor,
                         ])
                         highlightedXML = plainText
                     }
@@ -210,20 +207,20 @@ struct ContentView: View {
             }
         }
     }
-    
+
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
     }
-    
+
     // MARK: - Export and Clipboard
-    
+
     private func exportToFile() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.xml]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = "folder_structure.xml"
-        
+
         panel.begin { response in
             if response == .OK, let url = panel.url {
                 do {
@@ -234,7 +231,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     private func copyToClipboard() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
@@ -245,15 +242,15 @@ struct ContentView: View {
 // MARK: - Custom Syntax Highlighted Text View
 
 struct SyntaxHighlightedTextView: NSViewRepresentable {
-		// Wraps NSTextView for displaying attributed text in SwiftUI
-		// Configures text view as non-editable but selectable
-		// Updates display when attributedString binding changes
+    /// Wraps NSTextView for displaying attributed text in SwiftUI
+    /// Configures text view as non-editable but selectable
+    /// Updates display when attributedString binding changes
     @Binding var attributedString: NSAttributedString
-    
-    func makeNSView(context: Context) -> NSScrollView {
+
+    func makeNSView(context _: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
         let textView = scrollView.documentView as! NSTextView
-        
+
         textView.isEditable = false
         textView.isSelectable = true
         textView.backgroundColor = NSColor.textBackgroundColor
@@ -262,11 +259,11 @@ struct SyntaxHighlightedTextView: NSViewRepresentable {
         textView.isAutomaticLinkDetectionEnabled = false
         textView.isAutomaticDataDetectionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
-        
+
         return scrollView
     }
-    
-    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+
+    func updateNSView(_ scrollView: NSScrollView, context _: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         textView.textStorage?.setAttributedString(attributedString)
     }

@@ -2,33 +2,32 @@ import AppKit
 
 /// A class responsible for applying syntax highlighting to XML text
 class XMLSyntaxHighlighter {
-    
     // MARK: - Public Methods
-    
+
     /// Applies syntax highlighting to XML text
     /// - Parameter xml: The XML string to highlight
     /// - Returns: An NSAttributedString with color-coded XML elements
     static func highlight(_ xml: String) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: xml)
         let fullRange = NSRange(location: 0, length: xml.utf16.count)
-        
+
         // Base font and color
 //        let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         let font = NSFont.systemFont(ofSize: 12)
         attributedString.addAttribute(.font, value: font, range: fullRange)
         attributedString.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
-        
+
         // Apply syntax highlighting in order
         highlightTags(in: attributedString, range: fullRange, text: xml)
         highlightAttributes(in: attributedString, range: fullRange, text: xml)
         highlightAttributeValues(in: attributedString, range: fullRange, text: xml)
         highlightBrackets(in: attributedString, range: fullRange, text: xml)
-        
+
         return attributedString
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// Highlights XML tag names (opening and closing tags)
     private static func highlightTags(in attributedString: NSMutableAttributedString, range: NSRange, text: String) {
         let tagPattern = "</?[a-zA-Z][a-zA-Z0-9]*"
@@ -39,7 +38,7 @@ class XMLSyntaxHighlighter {
             }
         }
     }
-    
+
     /// Highlights XML attribute names
     private static func highlightAttributes(in attributedString: NSMutableAttributedString, range: NSRange, text: String) {
         let attributePattern = "\\s([a-zA-Z][a-zA-Z0-9]*)="
@@ -53,7 +52,7 @@ class XMLSyntaxHighlighter {
             }
         }
     }
-    
+
     /// Highlights XML attribute values (in quotes)
     private static func highlightAttributeValues(in attributedString: NSMutableAttributedString, range: NSRange, text: String) {
         let valuePattern = "\"[^\"]*\""
@@ -64,7 +63,7 @@ class XMLSyntaxHighlighter {
             }
         }
     }
-    
+
     /// Highlights XML brackets and slashes
     private static func highlightBrackets(in attributedString: NSMutableAttributedString, range: NSRange, text: String) {
         let bracketPattern = "[<>/]"
